@@ -88,6 +88,8 @@ serviceAccountKey.json
 credentials.json
 
 node_modules
+node_modules/
 package-lock.json
 yakuzadle-backend/node_modules
+yakuzadle-backend/node_modules/
 yakuzadle-backend/package-lock.json
