@@ -116,7 +116,7 @@ app.get("/list", async (req, res) => {
     const image = data.images && data.images.length > 0 ? data.images[0] : null;
     return {
       name: doc.id,
-      image: image ? `https://raw.githubusercontent.com/nievesdom/DiscordBot/main/yakuzadle/img_yakuzadle/${image}` : null
+      image: image ? `https://raw.githubusercontent.com/NievesDominguez/Yakuzadle/main/img_yakuzadle/${image}` : null
     };
   });
   res.json(items);

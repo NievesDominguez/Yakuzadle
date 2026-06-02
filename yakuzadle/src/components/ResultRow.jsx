@@ -49,7 +49,7 @@ function ResultRow({ guess, target }) {
   };
 
   const imageUrl = guess.character?.images?.[0]
-    ? `https://raw.githubusercontent.com/nievesdom/DiscordBot/main/yakuzadle/img_yakuzadle/${guess.character.images[0]}`
+    ? `https://raw.githubusercontent.com/NievesDominguez/Yakuzadle/main/img_yakuzadle/${guess.character.images[0]}`
     : null;
 
   const EXCLUDED_GAME = "Ryu Ga Gotoku Online";

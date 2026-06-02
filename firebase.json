@@ -1,0 +1,32 @@
+{  
+  "hosting": {  
+    "public": "yakuzadle/dist",  
+    "ignore": [  
+      "firebase.json",  
+      "**/.*",  
+      "**/node_modules/**"  
+    ],  
+    "rewrites": [  
+      {  
+        "source": "/api/guess",  
+        "function": "guess"  
+      },  
+      {  
+        "source": "/api/list",  
+        "function": "list"  
+      },  
+      {  
+        "source": "/api/daily-target",  
+        "function": "dailyTarget"  
+      },  
+      {  
+        "source": "**",  
+        "destination": "/index.html"  
+      }  
+    ]  
+  },  
+  "functions": {  
+    "source": "functions",  
+    "runtime": "nodejs18"  
+  }  
+}

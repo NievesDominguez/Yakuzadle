@@ -3,7 +3,6 @@ import GuessInput from "./components/GuessInput";
 import ResultTable from "./components/ResultTable";
 import Celebration from "./components/Celebration";
 import Toast from "./components/Toast";
-import { setDebugTarget } from "./services/api"; // nueva función
 import "./styles/main.css";
 
 function App() {
@@ -21,13 +20,14 @@ function App() {
     if (cached) {
       setCharacterNames(JSON.parse(cached).map(item => item.name));
     } else {
-      fetch("http://localhost:3001/list")
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/list`)
         .then(res => res.json())
         .then(data => {
           localStorage.setItem("characterList", JSON.stringify(data));
           setCharacterNames(data.map(item => item.name));
         })
         .catch(() => showToastMessage("Failed to load character list"));
+
     }
   }, []);
 
@@ -38,7 +38,7 @@ function App() {
   const handleGuess = async (name) => {
     try {
       const res = await fetch(
-        `http://localhost:3001/guess?name=${encodeURIComponent(name)}`
+        `${import.meta.env.VITE_API_BASE_URL}/guess?name=${encodeURIComponent(name)}`
       );
       const data = await res.json();
 
@@ -90,6 +90,7 @@ function App() {
       return;
     }
     const randomName = characterNames[Math.floor(Math.random() * characterNames.length)];
+    const res = await fetch(`http://localhost:3001/debug-set-target?name=${encodeURIComponent(randomName)}`);
     try {
       await setDebugTarget(randomName);
       // Resetear el juego
