@@ -142,8 +142,9 @@ async function getCharacter(name) {
 
 // Inicializar: cargar nombres y arrancar servidor
 loadCharacterNames().then(() => {
-  app.listen(3001, () => {
-    console.log("Yakuzadle backend running on port 3001");
+  const PORT = process.env.PORT || 3001;
+  app.listen(PORT, () => {
+    console.log(`Yakuzadle backend running on port ${PORT}`);
   });
 }).catch(err => {
   console.error("Failed to load character names:", err);
