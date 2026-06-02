@@ -86,3 +86,8 @@ ipython_config.py
 yakuzadle-backend/serviceAccountKey.json
 serviceAccountKey.json
 credentials.json
+
+node_modules
+package-lock.json
+yakuzadle-backend/node_modules
+yakuzadle-backend/package-lock.json
