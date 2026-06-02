@@ -1,9 +1,7 @@
-import express from "express";
-import cors from "cors";
-import { db } from "./firestore.js";
-import { compareCharacters } from "./compare.js";
-
-
+const express = require("express");  
+const cors = require("cors");  
+const { db } = require("./firestore.js");  
+const { compareCharacters } = require("./compare.js");
 
 const app = express();
 app.use(cors());

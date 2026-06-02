@@ -2,7 +2,7 @@
 // Compara los datos de un personaje ingresado (user) con el objetivo (target)
 // y devuelve un objeto con los resultados de cada campo.
 
-export function compareCharacters(user, target) {
+function compareCharacters(user, target) {
   
   // ------------------------------------------------------------------
   // Función auxiliar: normaliza "Unknown": devuelve null si es null, undefined o "unknown"
@@ -190,3 +190,4 @@ export function compareCharacters(user, target) {
     date_of_birth: compareBirth(user.date_of_birth, target.date_of_birth)
   };
 }
+module.exports = { compareCharacters };
