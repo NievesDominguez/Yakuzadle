@@ -238,6 +238,7 @@ function App() {
           <p className="subtitle">Guess the daily Like a Dragon character</p>
 
           <div className="difficulty-selector">
+            <p>Difficulty:</p>
             <button
               className={`difficulty-btn ${difficulty === "normal" ? "active" : ""}`}
               onClick={() => handleDifficultyChange("normal")}
@@ -278,14 +279,16 @@ function App() {
           )}
         </header>
 
-        <div className="attempts-counter">
-          Attempts: {attempts}
-          {import.meta.env.DEV && (
-            <button className="debug-button" onClick={handleDebugNewTarget} title="Set random target">
-              🎲
-            </button>
-          )}
-        </div>
+        {attempts > 0 && (
+          <div className="attempts-counter">
+            Attempts: {attempts}
+            {import.meta.env.DEV && (
+              <button className="debug-button" onClick={handleDebugNewTarget} title="Set random target">
+                🎲
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Barra de acciones: solo visible tras el primer intento */}
