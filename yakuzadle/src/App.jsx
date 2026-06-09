@@ -237,7 +237,6 @@ function App() {
           <h1 className="title">Yakuzadle</h1>
           <p className="subtitle">Guess the daily Like a Dragon character</p>
 
-          {/* Selector de dificultad */}
           <div className="difficulty-selector">
             <button
               className={`difficulty-btn ${difficulty === "normal" ? "active" : ""}`}
@@ -254,51 +253,31 @@ function App() {
             </button>
           </div>
 
-          {
-            !gameWon && !gameSurrendered ? (
-              <>
-                <GuessInput onGuess={handleGuess} onError={showToastMessage} />
-                <button className="surrender-button" onClick={handleSurrender}>
-                  Give up
-                </button>
-                <button className="hint-button" onClick={handleHint}>
-                  Hint
-                </button>
-                {hints.length > 0 && (
-                  <div className="hints-container">
-                    {hints.map((h, i) => (
-                      <div key={i} className="hint-item">
-                        <span className="hint-label">{h.field}:</span> {h.value}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            ) : showCelebration ? (
-              <Celebration onPlayAgain={handlePlayAgain} />
-            ) : gameSurrendered ? (
-              <div className="surrender-screen">
-                <h2>You gave up</h2>
-                <p>The character was:</p>
-                {targetCharacter?.images?.[0] && (
-                  <img
-                    className="surrender-character-image"
-                    src={`https://raw.githubusercontent.com/NievesDominguez/Yakuzadle/main/img_yakuzadle/${targetCharacter.images[0]}`}
-                    alt={targetCharacter.name}
-                  />
-                )}
-                <p className="surrender-character-name">{targetCharacter?.name}</p>
-                <button className="guess-button" onClick={handlePlayAgain}>
-                  Play Again
-                </button>
-              </div>
-            ) : (
-              <div className="waiting-message">✨ Revealing... ✨</div>
-            )
-          }
+          {!gameWon && !gameSurrendered ? (
+            <GuessInput onGuess={handleGuess} onError={showToastMessage} />
+          ) : showCelebration ? (
+            <Celebration onPlayAgain={handlePlayAgain} />
+          ) : gameSurrendered ? (
+            <div className="surrender-screen">
+              <h2>You gave up</h2>
+              <p>The character was:</p>
+              {targetCharacter?.images?.[0] && (
+                <img
+                  className="surrender-character-image"
+                  src={`https://raw.githubusercontent.com/NievesDominguez/Yakuzadle/main/img_yakuzadle/${targetCharacter.images[0]}`}
+                  alt={targetCharacter.name}
+                />
+              )}
+              <p className="surrender-character-name">{targetCharacter?.name}</p>
+              <button className="guess-button" onClick={handlePlayAgain}>
+                Play Again
+              </button>
+            </div>
+          ) : (
+            <div className="waiting-message">✨ Revealing... ✨</div>
+          )}
         </header>
 
-        {/* Contador de intentos — sigue posicionado absolutamente en la esquina */}
         <div className="attempts-counter">
           Attempts: {attempts}
           {import.meta.env.DEV && (
@@ -308,6 +287,31 @@ function App() {
           )}
         </div>
       </div>
+
+      {/* Barra de acciones: solo visible tras el primer intento */}
+      {attempts > 0 && !gameWon && !gameSurrendered && (
+        <div className="action-bar">
+          <button className="hint-button" onClick={handleHint}>
+            💡 Hint
+          </button>
+          <button className="surrender-button" onClick={handleSurrender}>
+            🏳️ Give up
+          </button>
+        </div>
+      )}
+
+      {/* Pistas: debajo de la barra de acciones, encima de la tabla */}
+      {hints.length > 0 && (
+        <div className="hints-area">
+          <div className="hints-container">
+            {hints.map((h, i) => (
+              <div key={i} className="hint-item">
+                <span className="hint-label">{h.field}:</span> {h.value}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="bottom-container">
         {guesses.length > 0 && (
