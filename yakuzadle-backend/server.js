@@ -31,12 +31,6 @@ async function loadCharacterNames() {
   console.log(`Loaded ${kiwamiCharacterNames.length} total characters, ${normalCharacterNames.length} normal`);
 }
 
-async function loadCharacterNames() {
-  const snapshot = await db.collection("personajes").get();
-  characterNames = snapshot.docs.map(doc => doc.id);
-  console.log(`Loaded ${characterNames.length} character names`);
-}
-
 // Función para obtener el personaje del día, con caché diario por dificultad
 async function getDailyTarget(difficulty = "normal", date = new Date()) {
   // Convertir la fecha a formato YYYY-MM-DD para comparar solo por día, sin importar la hora
