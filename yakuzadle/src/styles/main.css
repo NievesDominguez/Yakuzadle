@@ -503,3 +503,40 @@
   color: #aaa;  
   font-style: italic;  
 }
+
+/* ===========================  
+   SELECTOR DE DIFICULTAD  
+   =========================== */  
+.difficulty-selector {  
+  display: flex;  
+  gap: 8px;  
+  margin: 12px 0;  
+}  
+  
+.difficulty-btn {  
+  padding: 8px 20px;  
+  font-size: 0.95rem;  
+  border-radius: 8px;  
+  border: 2px solid #888;  
+  background: transparent;  
+  color: #ccc;  
+  cursor: pointer;  
+  transition: border-color 0.2s, color 0.2s, background 0.2s;  
+}  
+  
+.difficulty-btn:hover {  
+  border-color: #fff;  
+  color: #fff;  
+}  
+  
+.difficulty-btn.active {  
+  border-color: #e8b923;  
+  color: #e8b923;  
+  font-weight: bold;  
+}  
+  
+/* Kiwami activo en rojo para diferenciarlo */  
+.difficulty-btn.active[data-difficulty="kiwami"] {  
+  border-color: #c62828;  
+  color: #c62828;  
+}

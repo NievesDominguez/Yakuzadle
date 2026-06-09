@@ -31,6 +31,9 @@ function App() {
   // true cuando el jugador ha pulsado "Rendirse" y ha abandonado la partida  
   const [gameSurrendered, setGameSurrendered] = useState(false);
 
+  // Dificultad actual: "normal" o "kiwami" 
+  const [difficulty, setDifficulty] = useState("normal");
+
   // Carga inicial de la lista de personajes
   // Se intenta primero desde localStorage para evitar llamadas innecesarias a la API. Si no hay caché, se pide al backend y se guarda para futuras visitas
   useEffect(() => {
@@ -56,12 +59,25 @@ function App() {
     setToast({ message: msg, show: true });
   };
 
+  // Maneja el cambio de dificultad (normal/kiwami)
+  const handleDifficultyChange = (newDifficulty) => {
+    if (newDifficulty === difficulty) return;
+    setDifficulty(newDifficulty);
+    // Resetear toda la partida al cambiar de dificultad  
+    setGuesses([]);
+    setGameWon(false);
+    setGameSurrendered(false);
+    setShowCelebration(false);
+    setAttempts(0);
+    setTargetCharacter(null);
+  };
+
   // Lógica de intento de adivinar un personaje
   const handleGuess = async (name) => {
     try {
       // Envía el nombre del personaje al backend para que lo compare con el objetivo del día
       const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/guess?name=${encodeURIComponent(name)}`
+        `${import.meta.env.VITE_API_BASE_URL}/guess?name=${encodeURIComponent(name)}&difficulty=${difficulty}`
       );
       // El backend responde con los datos del personaje adivinado, el resultado de la comparación y los datos del personaje objetivo (si no se han enviado antes)
       const data = await res.json();
@@ -112,7 +128,7 @@ function App() {
     }
     // Si no tiene el personaje objetivo, lo obtiene del backend
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/daily-target`);
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/daily-target?difficulty=${difficulty}`);
       const data = await res.json();
       setTargetCharacter(data);
       setGameSurrendered(true);
@@ -143,7 +159,7 @@ function App() {
     const randomName = characterNames[Math.floor(Math.random() * characterNames.length)];
     // Envía una petición al backend para establecer el nuevo objetivo, luego reinicia el estado de la partida localmente para empezar de nuevo con el nuevo objetivo
     try {
-      await fetch(`http://localhost:3001/debug-set-target?name=${encodeURIComponent(randomName)}`);
+      await fetch(`http://localhost:3001/debug-set-target?name=${encodeURIComponent(randomName)}&difficulty=${difficulty}`);
       setGuesses([]);
       setGameWon(false);
       setGameSurrendered(false);
@@ -162,6 +178,22 @@ function App() {
       <div className="top-container">
         <header className="hero">
           <h1 className="title">Yakuzadle</h1>
+          {/* Selector de dificultad */}
+          <div className="difficulty-selector">
+            <button
+              className={`difficulty-btn ${difficulty === "normal" ? "active" : ""}`}
+              onClick={() => handleDifficultyChange("normal")}
+            >
+              Normal
+            </button>
+            <button
+              className={`difficulty-btn ${difficulty === "kiwami" ? "active" : ""}`}
+              data-difficulty="kiwami"
+              onClick={() => handleDifficultyChange("kiwami")}
+            >
+              Kiwami
+            </button>
+          </div>
           {
             // Si la partida no se ha ganado ni el jugador se ha rendido, muestra el input de adivinar y el botón de rendirse
             !gameWon && !gameSurrendered ? (
