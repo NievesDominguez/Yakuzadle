@@ -7,12 +7,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-let characterNames = [];
-let dailyTarget = {
-  date: null,
-  character: null
-};
-
 let normalCharacterNames = []; // Personajes sin campo difficulty
 let kiwamiCharacterNames = []; // Todos los personajes
 
@@ -108,10 +102,11 @@ app.get("/guess", async (req, res) => {
     // Comparar ambos personajes y devolver resultado
     const result = compareCharacters(userChar, targetChar);
     // Devolver datos del personaje adivinado, resultado de la comparación y datos del objetivo
+    const isCorrect = userChar.name === targetChar.name;
     res.json({
       character: { ...userChar, games: userChar.appears_in },
       result,
-      target: targetChar,
+      isCorrect,
     });
   } catch (error) {
     console.error("Error getting daily target:", error);
@@ -176,7 +171,6 @@ app.get("/hint", async (req, res) => {
     const available = HINT_FIELDS.filter((field) => {
       // Excluir campos ya usados o sin valor útil
       if (usedFields.includes(field)) return false;
-      const val = target[field] ?? target.appears_in; 
       // Para el campo games usar appears_in  
       const value = field === "games" ? target.appears_in : target[field];
       if (!value) return false;
