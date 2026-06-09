@@ -121,15 +121,17 @@ app.get("/list", async (req, res) => {
 });
 
 // Devuelve el personaje objetivo del día
-app.get("/daily-target", async (req, res) => {
-  try {
-    const target = await getDailyTarget();
-    // Por ahora solo devolvemos el nombre, pero podríamos devolver más datos si el frontend los necesita
-    res.json({ name: target.name });
-  } catch (error) {
-    console.error("Error fetching daily target:", error);
-    res.status(500).json({ error: "Could not fetch daily target" });
-  }
+app.get("/daily-target", async (req, res) => {  
+  try {  
+    const target = await getDailyTarget();  
+    res.json({  
+      name: target.name,  
+      images: target.images || []  
+    });  
+  } catch (error) {  
+    console.error("Error fetching daily target:", error);  
+    res.status(500).json({ error: "Could not fetch daily target" });  
+  }  
 });
 
 // Función auxiliar para obtener un personaje por nombre desde Firestore
