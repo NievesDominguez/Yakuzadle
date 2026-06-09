@@ -34,7 +34,7 @@ function App() {
   // Carga inicial de la lista de personajes
   // Se intenta primero desde localStorage para evitar llamadas innecesarias a la API. Si no hay caché, se pide al backend y se guarda para futuras visitas
   useEffect(() => {
-    const cached = localStorage.getItem("characterList");
+    const cached = localStorage.getItem("characterListV2");
     // Si hay datos en caché, los usamos directamente
     if (cached) {
       setCharacterNames(JSON.parse(cached).map(item => item.name));
@@ -44,7 +44,7 @@ function App() {
       fetch(`${import.meta.env.VITE_API_BASE_URL}/list`)
         .then(res => res.json())
         .then(data => {
-          localStorage.setItem("characterList", JSON.stringify(data));
+          localStorage.setItem("characterListV2", JSON.stringify(data));
           setCharacterNames(data.map(item => item.name));
         })
         .catch(() => showToastMessage("Failed to load character list"));

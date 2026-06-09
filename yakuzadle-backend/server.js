@@ -106,18 +106,20 @@ app.get("/guess", async (req, res) => {
   }
 });
 
-// Endpoint para listar todos los personajes (con imagen para autocompletado)
-app.get("/list", async (req, res) => {
-  const snapshot = await db.collection("personajes").get();
-  const items = snapshot.docs.map(doc => {
-    const data = doc.data();
-    const image = data.images && data.images.length > 0 ? data.images[0] : null;
-    return {
-      name: doc.id,
-      image: image ? `https://raw.githubusercontent.com/NievesDominguez/Yakuzadle/main/img_yakuzadle/${image}` : null
-    };
-  });
-  res.json(items);
+// Endpoint para listar todos los personajes
+app.get("/list", async (req, res) => {  
+  const snapshot = await db.collection("personajes").get();  
+  const items = snapshot.docs.map(doc => {  
+    const data = doc.data();  
+    const image = data.images && data.images.length > 0 ? data.images[0] : null;  
+    return {  
+      name: doc.id,  
+      image: image ? `https://raw.githubusercontent.com/NievesDominguez/Yakuzadle/main/img_yakuzadle/${image}` : null,  
+      aliases: data.aliases || [],  
+      nicknames: data.nicknames || [],  
+    };  
+  });  
+  res.json(items);  
 });
 
 // Devuelve el personaje objetivo del día

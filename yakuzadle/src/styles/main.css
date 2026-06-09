@@ -491,3 +491,15 @@
   font-weight: bold;  
   color: #fff;  
 }
+
+.suggestion-text {  
+  display: flex;  
+  flex-direction: column;  
+  gap: 2px;  
+}  
+  
+.suggestion-alias {  
+  font-size: 0.78rem;  
+  color: #aaa;  
+  font-style: italic;  
+}
