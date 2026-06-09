@@ -34,6 +34,11 @@ function App() {
   // Dificultad actual: "normal" o "kiwami" 
   const [difficulty, setDifficulty] = useState("normal");
 
+  // Campos ya mostrados como pista (para no repetirlos)  
+  const [usedHintFields, setUsedHintFields] = useState([]);
+  // Pistas ya obtenidas para mostrarlas en pantalla  
+  const [hints, setHints] = useState([]);
+
   // Carga inicial de la lista de personajes
   // Se intenta primero desde localStorage para evitar llamadas innecesarias a la API. Si no hay caché, se pide al backend y se guarda para futuras visitas
   useEffect(() => {
@@ -70,6 +75,8 @@ function App() {
     setShowCelebration(false);
     setAttempts(0);
     setTargetCharacter(null);
+    setUsedHintFields([]);
+    setHints([]);
   };
 
   // Lógica de intento de adivinar un personaje
@@ -146,6 +153,8 @@ function App() {
     setShowCelebration(false);
     setAttempts(0);
     setTargetCharacter(null);
+    setUsedHintFields([]);
+    setHints([]);
   };
 
   // Debug: cambiar objetivo aleatoriamente (solo en desarrollo)
@@ -169,6 +178,54 @@ function App() {
       showToastMessage(`New target set: ${randomName}`);
     } catch (error) {
       showToastMessage("Failed to set debug target");
+    }
+  };
+
+
+  // Se encarga de mostrar las pistas
+  const handleHint = async () => {
+    // Campos con pista y ya adivinados correctamente
+    const HINT_FIELDS = ["affiliation", "nationality", "games", "fighting_style", "height", "date_of_birth"];
+    const correctFields = HINT_FIELDS.filter((field) =>
+      guesses.some((g) => g.comparison?.[field] === "green")
+    );
+
+    // Unión de campos ya usados como pista y ya adivinados correctamente  
+    const allUsed = [...new Set([...usedHintFields, ...correctFields])];
+
+    try {
+      // Pide al backend una pista, enviando la dificultad actual y los campos ya usados para que no los repita
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/hint?difficulty=${difficulty}&usedFields=${allUsed.join(",")}`
+      );
+      const data = await res.json();
+
+      // Si el backend indica que no quedan pistas disponibles, muestra un mensaje y no hace nada
+      if (data.noHints) {
+        showToastMessage("No hints available");
+        return;
+      }
+
+      // Formatear el valor para mostrarlo  
+      const displayValue = Array.isArray(data.value)
+        ? data.value.join(", ")
+        : data.value;
+
+      // Etiqueta legible del campo  
+      const fieldLabels = {
+        affiliation: "Affiliation",
+        nationality: "Nationality/Heritage",
+        games: "Games",
+        fighting_style: "Fighting Style",
+        height: "Height",
+        date_of_birth: "Birthdate",
+      };
+
+      // Añade el nuevo campo de pista a la lista de campos usados y a la lista de pistas para mostrar en pantalla
+      setUsedHintFields((prev) => [...prev, data.field]);
+      setHints((prev) => [...prev, { field: fieldLabels[data.field], value: displayValue }]);
+    } catch {
+      showToastMessage("Could not get hint.");
     }
   };
 
@@ -205,6 +262,18 @@ function App() {
                 <button className="surrender-button" onClick={handleSurrender}>
                   Give up
                 </button>
+                <button className="hint-button" onClick={handleHint}>
+                  Hint
+                </button>
+                {hints.length > 0 && (
+                  <div className="hints-container">
+                    {hints.map((h, i) => (
+                      <div key={i} className="hint-item">
+                        <span className="hint-label">{h.field}:</span> {h.value}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </>
             ) : showCelebration ? (
               /* Pantalla de victoria con confeti y opción de jugar de nuevo */
