@@ -235,6 +235,8 @@ function App() {
       <div className="top-container">
         <header className="hero">
           <h1 className="title">Yakuzadle</h1>
+          <p className="subtitle">Guess the daily Like a Dragon character</p>
+
           {/* Selector de dificultad */}
           <div className="difficulty-selector">
             <button
@@ -251,14 +253,11 @@ function App() {
               Kiwami
             </button>
           </div>
+
           {
-            // Si la partida no se ha ganado ni el jugador se ha rendido, muestra el input de adivinar y el botón de rendirse
             !gameWon && !gameSurrendered ? (
               <>
-                {/* Input de búsqueda con autocompletado */}
                 <GuessInput onGuess={handleGuess} onError={showToastMessage} />
-
-                {/* Botón para abandonar la partida y ver la respuesta */}
                 <button className="surrender-button" onClick={handleSurrender}>
                   Give up
                 </button>
@@ -276,15 +275,11 @@ function App() {
                 )}
               </>
             ) : showCelebration ? (
-              /* Pantalla de victoria con confeti y opción de jugar de nuevo */
               <Celebration onPlayAgain={handlePlayAgain} />
             ) : gameSurrendered ? (
-              /* Pantalla de rendición: muestra imagen y nombre del personaje correcto */
               <div className="surrender-screen">
                 <h2>You gave up</h2>
                 <p>The character was:</p>
-
-                {/* Imagen del personaje */}
                 {targetCharacter?.images?.[0] && (
                   <img
                     className="surrender-character-image"
@@ -292,20 +287,18 @@ function App() {
                     alt={targetCharacter.name}
                   />
                 )}
-
                 <p className="surrender-character-name">{targetCharacter?.name}</p>
-
                 <button className="guess-button" onClick={handlePlayAgain}>
                   Play Again
                 </button>
               </div>
             ) : (
-              /* Estado transitorio: partida ganada pero la animación de la fila aún no terminó */
               <div className="waiting-message">✨ Revealing... ✨</div>
-            )}
+            )
+          }
         </header>
 
-        {/* Contador de intentos y botón de debug (solo en modo desarrollo) */}
+        {/* Contador de intentos — sigue posicionado absolutamente en la esquina */}
         <div className="attempts-counter">
           Attempts: {attempts}
           {import.meta.env.DEV && (
@@ -316,7 +309,6 @@ function App() {
         </div>
       </div>
 
-      {/* Tabla de resultados: solo visible cuando hay al menos un intento */}
       <div className="bottom-container">
         {guesses.length > 0 && (
           <main className="results">
@@ -325,7 +317,6 @@ function App() {
         )}
       </div>
 
-      {/* Toast de notificaciones (errores, avisos) */}
       {toast.show && (
         <Toast
           message={toast.message}
