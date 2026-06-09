@@ -93,6 +93,9 @@ function App() {
   const [gameSurrendered, setGameSurrendered] = useState(initialSession?.gameSurrendered ?? false);
   const [usedHintFields, setUsedHintFields] = useState(initialSession?.usedHintFields ?? []);
   const [hints, setHints] = useState(initialSession?.hints ?? []);
+  const [toast, setToast] = useState({ message: "", show: false });
+  const [characterNames, setCharacterNames] = useState([]);
+  const [difficulty, setDifficulty] = useState("normal");
 
   // Estadísticas del jugador para la dificultad actual  
   const [stats, setStats] = useState(() => loadStats("normal"));
