@@ -171,7 +171,7 @@ function App() {
 
                 {/* Botón para abandonar la partida y ver la respuesta */}
                 <button className="surrender-button" onClick={handleSurrender}>
-                  Rendirse
+                  Give up
                 </button>
               </>
             ) : showCelebration ? (
@@ -180,8 +180,8 @@ function App() {
             ) : gameSurrendered ? (
               /* Pantalla de rendición: muestra imagen y nombre del personaje correcto */
               <div className="surrender-screen">
-                <h2>Te has rendido</h2>
-                <p>El personaje era:</p>
+                <h2>You gave up</h2>
+                <p>The character was:</p>
 
                 {/* Imagen del personaje */}
                 {targetCharacter?.images?.[0] && (
@@ -195,7 +195,7 @@ function App() {
                 <p className="surrender-character-name">{targetCharacter?.name}</p>
 
                 <button className="guess-button" onClick={handlePlayAgain}>
-                  Jugar de nuevo
+                  Play Again
                 </button>
               </div>
             ) : (
