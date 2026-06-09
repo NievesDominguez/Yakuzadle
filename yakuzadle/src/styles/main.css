@@ -550,9 +550,9 @@ F .debug-button {
    SELECTOR DE DIFICULTAD    
    =========================== */
 .difficulty-label {
-  font-size: 0.85rem;
-  color: #aaa;
-  margin: 8px 0 4px 0;
+  font-size: 1rem;
+  color: #c7c7c7;
+  margin: 4px 0 4px 0;
   text-align: center;
 }
 
