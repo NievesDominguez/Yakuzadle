@@ -237,8 +237,8 @@ function App() {
           <h1 className="title">Yakuzadle</h1>
           <p className="subtitle">Guess the daily Like a Dragon character</p>
 
+          <p className="difficulty-label">Difficulty:</p>
           <div className="difficulty-selector">
-            <p>Difficulty:</p>
             <button
               className={`difficulty-btn ${difficulty === "normal" ? "active" : ""}`}
               onClick={() => handleDifficultyChange("normal")}

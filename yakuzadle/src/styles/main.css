@@ -422,6 +422,7 @@
   line-height: 1;
 }
 
+/* Animación para que el toast aparezca desde abajo con un pequeño desplazamiento */
 @keyframes slideUp {
   from {
     opacity: 0;
@@ -548,54 +549,47 @@ F .debug-button {
 /* ===========================    
    SELECTOR DE DIFICULTAD    
    =========================== */
+.difficulty-label {
+  font-size: 0.85rem;
+  color: #aaa;
+  margin: 8px 0 4px 0;
+  text-align: center;
+}
+
 .difficulty-selector {
   display: flex;
-  gap: 10px;
-  margin: 8px 0;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .difficulty-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 24px;
+  padding: 10px 20px;
   font-size: 1rem;
-  font-weight: 600;
-  border-radius: 10px;
-  border: 2px solid #555;
-  background: rgba(255, 255, 255, 0.04);
-  color: #aaa;
+  border-radius: 8px;
+  border: 2px solid #888;
+  background: transparent;
+  color: #ccc;
   cursor: pointer;
-  letter-spacing: 0.03em;
-  transition: border-color 0.2s, color 0.2s, background 0.2s, box-shadow 0.2s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 
 .difficulty-btn:hover {
-  border-color: #ccc;
+  border-color: #fff;
   color: #fff;
-  background: rgba(255, 255, 255, 0.08);
 }
 
-/* Normal activo: dorado, igual que el hint-button */
+/* Normal activo: dorado relleno */
 .difficulty-btn.active {
   border-color: #e8b923;
-  color: #e8b923;
-  background: rgba(232, 185, 35, 0.12);
-  box-shadow: 0 0 10px rgba(232, 185, 35, 0.25);
+  background: #e8b923;
+  color: #1a1a1a;
 }
 
-/* Kiwami activo: rojo */
+/* Kiwami activo: rojo relleno*/
 .difficulty-btn.active[data-difficulty="kiwami"] {
   border-color: #c62828;
-  color: #c62828;
-  background: rgba(198, 40, 40, 0.12);
-  box-shadow: 0 0 10px rgba(198, 40, 40, 0.25);
-}
-
-.difficulty-indicator {
-  font-size: 0.6rem;
-  line-height: 1;
-  opacity: 0.9;
+  background: #c62828;
+  color: white;
 }
 
 /* ===========================  
