@@ -9,28 +9,28 @@ function ResultRow({ guess, target }) {
     ["date_of_birth", "Birthdate"],
   ];
 
-  // Flechas hacia el personaje objetivo
+  // Flechas para indicar si la altura y edad es mayor/menor
   const arrowFor = (key, color) => {
     if (key === "height") {
-      if (color.includes("higher")) return "↓"; // adivinado más alto → objetivo más bajo
-      if (color.includes("lower")) return "↑";   // adivinado más bajo → objetivo más alto
+      if (color.includes("higher")) return "↓";
+      if (color.includes("lower")) return "↑";
     }
     if (key === "date_of_birth") {
-      if (color.includes("older")) return "↓";   // adivinado mayor → él es mayor (flecha abajo)
-      if (color.includes("younger")) return "↑"; // adivinado más joven → flecha arriba
+      if (color.includes("older")) return "↓";
+      if (color.includes("younger")) return "↑";
     }
     return "";
   };
 
-  // Tooltip para altura y fecha
+  // Tooltip para altura y edad
   const tooltipFor = (key, color) => {
     if (key === "height") {
-      if (color.includes("higher")) return "Target is lower";
-      if (color.includes("lower")) return "Target is higher";
+      if (color.includes("higher")) return "Target is shorter";
+      if (color.includes("lower")) return "Target is taller";
     }
     if (key === "date_of_birth") {
-      if (color.includes("older")) return "You are older";
-      if (color.includes("younger")) return "You are younger";
+      if (color.includes("older")) return "Target is younger";
+      if (color.includes("younger")) return "Target is older";
     }
     return "";
   };
