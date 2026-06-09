@@ -6,42 +6,80 @@ import Celebration from "./components/Celebration";
 import Toast from "./components/Toast";  
 import "./styles/main.css";  
   
+// --- Utilidades de estadísticas ---  
+  
+const STATS_KEY = (difficulty) => `yakuzadle_stats_${difficulty}`;  
+  
+const defaultStats = () => ({  
+  gamesPlayed: 0,  
+  wins: 0,  
+  currentStreak: 0,  
+  maxStreak: 0,  
+  lastPlayedDate: null,  
+  guessDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, "7+": 0 },  
+});  
+  
+function loadStats(difficulty) {  
+  try {  
+    const raw = localStorage.getItem(STATS_KEY(difficulty));  
+    return raw ? { ...defaultStats(), ...JSON.parse(raw) } : defaultStats();  
+  } catch {  
+    return defaultStats();  
+  }  
+}  
+  
+function saveStats(difficulty, stats) {  
+  localStorage.setItem(STATS_KEY(difficulty), JSON.stringify(stats));  
+}  
+  
+// Actualiza las estadísticas al terminar una partida.  
+// won: true si ganó, false si se rindió. attempts: número de intentos (solo relevante si won).  
+function updateStats(difficulty, won, attempts) {  
+  const stats = loadStats(difficulty);  
+  const today = new Date().toISOString().split("T")[0];  
+  
+  // Evitar contar la misma partida dos veces si el jugador recarga  
+  if (stats.lastPlayedDate === today) return stats;  
+  
+  stats.gamesPlayed += 1;  
+  stats.lastPlayedDate = today;  
+  
+  if (won) {  
+    stats.wins += 1;  
+    stats.currentStreak += 1;  
+    stats.maxStreak = Math.max(stats.maxStreak, stats.currentStreak);  
+    const bucket = attempts <= 6 ? String(attempts) : "7+";  
+    stats.guessDistribution[bucket] = (stats.guessDistribution[bucket] || 0) + 1;  
+  } else {  
+    stats.currentStreak = 0;  
+  }  
+  
+  saveStats(difficulty, stats);  
+  return stats;  
+}  
+  
+// ----------------------------------  
+  
+  
 function App() {  
-  // Lista de personajes adivinados en la sesión actual  
   const [guesses, setGuesses] = useState([]);  
-  
-  // Datos completos del personaje objetivo del día (nombre, imágenes, atributos)  
   const [targetCharacter, setTargetCharacter] = useState(null);  
-  
-  // true cuando el jugador ha acertado el personaje    
   const [gameWon, setGameWon] = useState(false);  
-  
-  // true cuando la animación de victoria ha terminado y se muestra el componente Celebration    
   const [showCelebration, setShowCelebration] = useState(false);  
-  
-  // Número de intentos realizados en la partida actual    
   const [attempts, setAttempts] = useState(0);  
-  
-  // Estado del toast de notificación (mensaje y visibilidad)    
   const [toast, setToast] = useState({ message: "", show: false });  
-  
-  // Lista de nombres de todos los personajes disponibles para el autocompletado    
   const [characterNames, setCharacterNames] = useState([]);  
-  
-  // true cuando el jugador ha pulsado "Rendirse" y ha abandonado la partida    
   const [gameSurrendered, setGameSurrendered] = useState(false);  
-  
-  // Dificultad actual: "normal" o "kiwami"   
   const [difficulty, setDifficulty] = useState("normal");  
-  
-  // Campos ya mostrados como pista (para no repetirlos)    
   const [usedHintFields, setUsedHintFields] = useState([]);  
-  // Pistas ya obtenidas para mostrarlas en pantalla    
   const [hints, setHints] = useState([]);  
   
-  // Carga inicial de la lista de personajes.  
-  // Se intenta primero desde localStorage para evitar llamadas innecesarias a la API.  
-  // El caché expira tras 24 horas para reflejar nuevos personajes añadidos a Firestore.  
+  // Estadísticas del jugador para la dificultad actual  
+  const [stats, setStats] = useState(() => loadStats("normal"));  
+  // Controla la visibilidad del modal de estadísticas  
+  const [showStats, setShowStats] = useState(false);  
+  
+  // Carga inicial de la lista de personajes con caché de 24h  
   useEffect(() => {  
     const cached = localStorage.getItem("characterListV2");  
     const cachedAt = localStorage.getItem("characterListV2_cachedAt");  
@@ -62,16 +100,14 @@ function App() {
     }  
   }, []);  
   
-  // Muestra un toast en pantalla  
   const showToastMessage = (msg) => {  
     setToast({ message: msg, show: true });  
   };  
   
-  // Maneja el cambio de dificultad (normal/kiwami)  
   const handleDifficultyChange = (newDifficulty) => {  
     if (newDifficulty === difficulty) return;  
     setDifficulty(newDifficulty);  
-    // Resetear toda la partida al cambiar de dificultad    
+    setStats(loadStats(newDifficulty));  
     setGuesses([]);  
     setGameWon(false);  
     setGameSurrendered(false);  
@@ -82,15 +118,11 @@ function App() {
     setHints([]);  
   };  
   
-  // Lógica de intento de adivinar un personaje  
   const handleGuess = async (name) => {  
     try {  
-      // Envía el nombre del personaje al backend para que lo compare con el objetivo del día  
       const res = await fetch(  
         `${import.meta.env.VITE_API_BASE_URL}/guess?name=${encodeURIComponent(name)}&difficulty=${difficulty}`  
       );  
-      // El backend responde con los datos del personaje adivinado, el resultado de la comparación  
-      // y un booleano isCorrect (el objetivo ya no se expone en esta respuesta)  
       const data = await res.json();  
   
       if (data.error) {  
@@ -98,9 +130,13 @@ function App() {
         return;  
       }  
   
-      const isCorrect = data.isCorrect;  
+      if (!targetCharacter) {  
+        setTargetCharacter(data.target);  
+      }  
   
-      // Añade el intento a la tabla de resultados    
+      const isCorrect = data.character.name === data.target.name;  
+      const newAttempts = attempts + 1;  
+  
       setGuesses((prev) => [  
         ...prev,  
         {  
@@ -109,52 +145,44 @@ function App() {
           comparison: data.result,  
         },  
       ]);  
-      setAttempts((prev) => prev + 1);  
+      setAttempts(newAttempts);  
   
-      // Si el intento es correcto, obtiene los datos del objetivo desde /daily-target  
-      // y espera a que termine la animación de la fila antes de mostrar la pantalla de celebración  
       if (isCorrect && !gameWon) {  
         setGameWon(true);  
-        try {  
-          const targetRes = await fetch(  
-            `${import.meta.env.VITE_API_BASE_URL}/daily-target?difficulty=${difficulty}`  
-          );  
-          const targetData = await targetRes.json();  
-          setTargetCharacter(targetData);  
-        } catch (error) {  
-          console.error("Could not fetch target character:", error);  
-        }  
-        const totalAnimationTime = 4000; // ms que dura la animación de la fila    
+        const updated = updateStats(difficulty, true, newAttempts);  
+        setStats(updated);  
+        const totalAnimationTime = 4000;  
         setTimeout(() => {  
           setShowCelebration(true);  
           window.scrollTo({ top: 0, behavior: "smooth" });  
         }, totalAnimationTime);  
       }  
     } catch (error) {  
+      console.error("Error submitting guess:", error);  
       showToastMessage("Network error. Please try again.");  
     }  
   };  
   
-  // Rendirse  
   const handleSurrender = async () => {  
-    // Si ya tiene el personaje objetivo cargado, no necesita hacer la petición al backend y muestra directamente la pantalla de rendición  
     if (targetCharacter) {  
+      const updated = updateStats(difficulty, false, attempts);  
+      setStats(updated);  
       setGameSurrendered(true);  
       return;  
     }  
-    // Si no tiene el personaje objetivo, lo obtiene del backend  
     try {  
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/daily-target?difficulty=${difficulty}`);  
       const data = await res.json();  
       setTargetCharacter(data);  
+      const updated = updateStats(difficulty, false, attempts);  
+      setStats(updated);  
       setGameSurrendered(true);  
-    } catch {  
+    } catch (error) {  
+      console.error("Error fetching daily target on surrender:", error);  
       showToastMessage("No se pudo obtener el personaje del día.");  
     }  
   };  
   
-  // Reiniciar partida  
-  // Limpia todos los estados de la partida para empezar desde cero  
   const handlePlayAgain = () => {  
     setGuesses([]);  
     setGameWon(false);  
@@ -166,16 +194,12 @@ function App() {
     setHints([]);  
   };  
   
-  // Debug: cambiar objetivo aleatoriamente (solo en desarrollo)  
   const handleDebugNewTarget = async () => {  
-    // Si no hay personajes cargados, muestra un mensaje de error y no hace nada  
     if (characterNames.length === 0) {  
       showToastMessage("No characters loaded");  
       return;  
     }  
-    // Elige un personaje al azar de la lista de nombres  
     const randomName = characterNames[Math.floor(Math.random() * characterNames.length)];  
-    // Envía una petición al backend para establecer el nuevo objetivo, luego reinicia el estado de la partida localmente para empezar de nuevo con el nuevo objetivo  
     try {  
       await fetch(`http://localhost:3001/debug-set-target?name=${encodeURIComponent(randomName)}&difficulty=${difficulty}`);  
       setGuesses([]);  
@@ -186,41 +210,31 @@ function App() {
       setTargetCharacter(null);  
       showToastMessage(`New target set: ${randomName}`);  
     } catch (error) {  
+      console.error("Error setting debug target:", error);  
       showToastMessage("Failed to set debug target");  
     }  
   };  
   
-  
-  // Se encarga de mostrar las pistas  
   const handleHint = async () => {  
-    // Campos con pista y ya adivinados correctamente  
     const HINT_FIELDS = ["affiliation", "nationality", "games", "fighting_style", "height", "date_of_birth"];  
     const correctFields = HINT_FIELDS.filter((field) =>  
       guesses.some((g) => g.comparison?.[field] === "green")  
     );  
-  
-    // Unión de campos ya usados como pista y ya adivinados correctamente    
     const allUsed = [...new Set([...usedHintFields, ...correctFields])];  
   
     try {  
-      // Pide al backend una pista, enviando la dificultad actual y los campos ya usados para que no los repita  
       const res = await fetch(  
         `${import.meta.env.VITE_API_BASE_URL}/hint?difficulty=${difficulty}&usedFields=${allUsed.join(",")}`  
       );  
       const data = await res.json();  
   
-      // Si el backend indica que no quedan pistas disponibles, muestra un mensaje y no hace nada  
       if (data.noHints) {  
         showToastMessage("No hints available");  
         return;  
       }  
   
-      // Formatear el valor para mostrarlo    
-      const displayValue = Array.isArray(data.value)  
-        ? data.value.join(", ")  
-        : data.value;  
+      const displayValue = Array.isArray(data.value) ? data.value.join(", ") : data.value;  
   
-      // Etiqueta legible del campo    
       const fieldLabels = {  
         affiliation: "Affiliation",  
         nationality: "Nationality/Heritage",  
@@ -230,19 +244,62 @@ function App() {
         date_of_birth: "Birthdate",  
       };  
   
-      // Añade el nuevo campo de pista a la lista de campos usados y a la lista de pistas para mostrar en pantalla  
       setUsedHintFields((prev) => [...prev, data.field]);  
       setHints((prev) => [...prev, { field: fieldLabels[data.field], value: displayValue }]);  
-    } catch {  
+    } catch (error) {  
+      console.error("Error fetching hint:", error);  
       showToastMessage("Could not get hint.");  
     }  
   };  
   
-  // Render  
+  // Render del modal de estadísticas  
+  const renderStatsModal = () => {  
+    const winRate = stats.gamesPlayed > 0  
+      ? Math.round((stats.wins / stats.gamesPlayed) * 100)  
+      : 0;  
+    const maxDist = Math.max(...Object.values(stats.guessDistribution), 1);  
+  
+    return (  
+      <div className="stats-modal-overlay" onClick={() => setShowStats(false)}>  
+        <div className="stats-modal" onClick={e => e.stopPropagation()}>  
+          <button className="stats-modal-close" onClick={() => setShowStats(false)}>✕</button>  
+          <h2>Statistics — {difficulty === "kiwami" ? "Kiwami" : "Normal"}</h2>  
+          <div className="stats-summary">  
+            <div className="stats-item"><span>{stats.gamesPlayed}</span><label>Played</label></div>  
+            <div className="stats-item"><span>{winRate}%</span><label>Win %</label></div>  
+            <div className="stats-item"><span>{stats.currentStreak}</span><label>Streak</label></div>  
+            <div className="stats-item"><span>{stats.maxStreak}</span><label>Best Streak</label></div>  
+          </div>  
+          <h3>Guess Distribution</h3>  
+          <div className="stats-distribution">  
+            {Object.entries(stats.guessDistribution).map(([bucket, count]) => (  
+              <div key={bucket} className="dist-row">  
+                <span className="dist-label">{bucket}</span>  
+                <div  
+                  className="dist-bar"  
+                  style={{ width: `${Math.max((count / maxDist) * 100, count > 0 ? 8 : 2)}%` }}  
+                >  
+                  {count > 0 && count}  
+                </div>  
+              </div>  
+            ))}  
+          </div>  
+        </div>  
+      </div>  
+    );  
+  };  
+  
   return (  
     <div className="page">  
+      {showStats && renderStatsModal()}  
+  
       <div className="top-container">  
         <header className="hero">  
+          <div className="header-actions">  
+            <button className="stats-button" onClick={() => setShowStats(true)} title="Statistics">  
+              📊  
+            </button>  
+          </div>  
           <h1 className="title">Yakuzadle</h1>  
           <p className="subtitle">Guess the daily Like a Dragon character</p>  
   
@@ -300,7 +357,6 @@ function App() {
         )}  
       </div>  
   
-      {/* Barra de acciones: solo visible tras el primer intento */}  
       {attempts > 0 && !gameWon && !gameSurrendered && (  
         <div className="action-bar">  
           <button className="hint-button" onClick={handleHint}>  
@@ -312,7 +368,6 @@ function App() {
         </div>  
       )}  
   
-      {/* Pistas: debajo de la barra de acciones, encima de la tabla */}  
       {hints.length > 0 && (  
         <div className="hints-area">  
           <div className="hints-container">  
