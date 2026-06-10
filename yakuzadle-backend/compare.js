@@ -148,6 +148,7 @@ function compareCharacters(user, target) {
 
   // Resultado final para cada campo
   return {
+    gender: compareValue((user.gender && user.gender.trim()) || "M", (target.gender && target.gender.trim()) || "M"),
     affiliation: compareList(user.affiliation || [], target.affiliation || []),
     nationality: compareList(toArray(user.nationality), toArray(target.nationality)),
     games: compareGames(user.appears_in || [], target.appears_in || []),
@@ -155,7 +156,6 @@ function compareCharacters(user, target) {
     fighting_style: compareFightingStyles(user.fighting_style || [], target.fighting_style || []),
     height: compareHeight(user.height, target.height),
     date_of_birth: compareBirth(user.date_of_birth, target.date_of_birth),
-    gender: compareValue(user.gender || "M", target.gender || "M"),
   };
 }
 module.exports = { compareCharacters };
