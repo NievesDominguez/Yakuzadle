@@ -212,6 +212,12 @@ app.get("/hint", async (req, res) => {
 });
 
 
+// Endpoint de salud para monitoreo
+app.get("/health", (req, res) => {  
+  res.json({ status: "ok" });  
+});
+
+
 // Inicializar: cargar nombres y arrancar servidor  
 loadCharacterNames().then(() => {
   const PORT = process.env.PORT || 3001;
