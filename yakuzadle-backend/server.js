@@ -127,7 +127,7 @@ app.get("/guess", async (req, res) => {
     const targetChar = await getDailyTarget(difficulty);
     const result = compareCharacters(userChar, targetChar);
     res.json({
-      character: { ...userChar, games: userChar.appears_in, gender: (userChar.gender && userChar.gender.trim()) || "M" },
+      character: { ...userChar, games: userChar.appears_in, gender: userChar.gender || "M" },
       result,
       target: { name: targetChar.name, images: targetChar.images || [] },
     });

@@ -148,7 +148,7 @@ function compareCharacters(user, target) {
 
   // Resultado final para cada campo
   return {
-    gender: compareValue((user.gender && user.gender.trim()) || "M", (target.gender && target.gender.trim()) || "M"),
+    gender: compareValue(user.gender || "M", target.gender || "M"),
     affiliation: compareList(user.affiliation || [], target.affiliation || []),
     nationality: compareList(toArray(user.nationality), toArray(target.nationality)),
     games: compareGames(user.appears_in || [], target.appears_in || []),
