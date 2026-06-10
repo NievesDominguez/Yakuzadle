@@ -6,8 +6,17 @@ import Celebration from "./components/Celebration";
 import Toast from "./components/Toast";
 import "./styles/main.css";
 
-// --- Utilidades de estadísticas ---  
+import StatsModal from "./components/StatsModal";
+import {
+  guessCharacter,
+  getCharacterList,
+  getDailyTarget,
+  getHint,
+  setDebugTarget,
+  IMAGE_BASE_URL,
+} from "./services/api";
 
+// Utilidades de estadísticas
 const STATS_KEY = (difficulty) => `yakuzadle_stats_${difficulty}`;
 
 const defaultStats = () => ({
@@ -104,22 +113,20 @@ function App() {
 
   // Carga inicial de la lista de personajes con caché de 24h  
   useEffect(() => {
-    const cached = localStorage.getItem("characterListV2");
-    const cachedAt = localStorage.getItem("characterListV2_cachedAt");
+    const cached = localStorage.getItem("characterListV3");
+    const cachedAt = localStorage.getItem("characterListV3_cachedAt");
     const ONE_DAY_MS = 24 * 60 * 60 * 1000;
     const isExpired = !cachedAt || (Date.now() - Number(cachedAt)) > ONE_DAY_MS;
 
     if (cached && !isExpired) {
       setCharacterNames(JSON.parse(cached).map(item => item.name));
     } else {
-      fetch(`${import.meta.env.VITE_API_BASE_URL}/list`)
-        .then(res => res.json())
+      getCharacterList()
         .then(data => {
-          localStorage.setItem("characterListV2", JSON.stringify(data));
-          localStorage.setItem("characterListV2_cachedAt", String(Date.now()));
+          localStorage.setItem("characterListV3", JSON.stringify(data));
+          localStorage.setItem("characterListV3_cachedAt", String(Date.now()));
           setCharacterNames(data.map(item => item.name));
         })
-        .catch(() => showToastMessage("Failed to load character list"));
     }
   }, []);
 
@@ -145,10 +152,7 @@ function App() {
 
   const handleGuess = async (name) => {
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/guess?name=${encodeURIComponent(name)}&difficulty=${difficulty}`
-      );
-      const data = await res.json();
+      const data = await guessCharacter(name, difficulty);
 
       if (data.error) {
         showToastMessage("Character not found");
@@ -209,8 +213,7 @@ function App() {
       return;
     }
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/daily-target?difficulty=${difficulty}`);
-      const data = await res.json();
+      const data = await getDailyTarget(difficulty);
       setTargetCharacter(data);
       const updated = updateStats(difficulty, false, attempts);
       setStats(updated);
@@ -249,7 +252,7 @@ function App() {
     }
     const randomName = characterNames[Math.floor(Math.random() * characterNames.length)];
     try {
-      await fetch(`http://localhost:3001/debug-set-target?name=${encodeURIComponent(randomName)}&difficulty=${difficulty}`);
+      await setDebugTarget(randomName, difficulty);
       setGuesses([]);
       setGameWon(false);
       setGameSurrendered(false);
@@ -271,10 +274,7 @@ function App() {
     const allUsed = [...new Set([...usedHintFields, ...correctFields])];
 
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/hint?difficulty=${difficulty}&usedFields=${allUsed.join(",")}`
-      );
-      const data = await res.json();
+      const data = await getHint(difficulty, allUsed);
 
       if (data.noHints) {
         showToastMessage("No hints available");
@@ -311,46 +311,16 @@ function App() {
     }
   };
 
-  // Render del modal de estadísticas  
-  const renderStatsModal = () => {
-    const winRate = stats.gamesPlayed > 0
-      ? Math.round((stats.wins / stats.gamesPlayed) * 100)
-      : 0;
-    const maxDist = Math.max(...Object.values(stats.guessDistribution), 1);
-
-    return (
-      <div className="stats-modal-overlay" onClick={() => setShowStats(false)}>
-        <div className="stats-modal" onClick={e => e.stopPropagation()}>
-          <button className="stats-modal-close" onClick={() => setShowStats(false)}>✕</button>
-          <h2>Statistics — {difficulty === "kiwami" ? "Kiwami" : "Normal"}</h2>
-          <div className="stats-summary">
-            <div className="stats-item"><span>{stats.gamesPlayed}</span><label>Played</label></div>
-            <div className="stats-item"><span>{winRate}%</span><label>Win %</label></div>
-            <div className="stats-item"><span>{stats.currentStreak}</span><label>Streak</label></div>
-            <div className="stats-item"><span>{stats.maxStreak}</span><label>Best Streak</label></div>
-          </div>
-          <h3>Guess Distribution</h3>
-          <div className="stats-distribution">
-            {Object.entries(stats.guessDistribution).map(([bucket, count]) => (
-              <div key={bucket} className="dist-row">
-                <span className="dist-label">{bucket}</span>
-                <div
-                  className="dist-bar"
-                  style={{ width: `${Math.max((count / maxDist) * 100, count > 0 ? 8 : 2)}%` }}
-                >
-                  {count > 0 && count}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="page">
-      {showStats && renderStatsModal()}
+      {showStats && (
+        <StatsModal
+          stats={stats}
+          difficulty={difficulty}
+          onClose={() => setShowStats(false)}
+        />
+      )}
 
       <div className="top-container">
         <header className="hero">
@@ -380,7 +350,12 @@ function App() {
           </div>
 
           {!gameWon && !gameSurrendered ? (
-            <GuessInput onGuess={handleGuess} onError={showToastMessage} />
+            <GuessInput
+              onGuess={handleGuess}
+              onError={showToastMessage}
+              difficulty={difficulty}
+              guessedNames={guesses.map(g => g.name)}
+            />
           ) : showCelebration ? (
             <Celebration onPlayAgain={handlePlayAgain} />
           ) : gameSurrendered ? (
@@ -390,7 +365,8 @@ function App() {
               {targetCharacter?.images?.[0] && (
                 <img
                   className="surrender-character-image"
-                  src={`https://raw.githubusercontent.com/NievesDominguez/Yakuzadle/main/img_yakuzadle/${targetCharacter.images[0]}`}
+                  /*src={`https://raw.githubusercontent.com/NievesDominguez/Yakuzadle/main/img_yakuzadle/${targetCharacter.images[0]}`}*/
+                  src={`${IMAGE_BASE_URL}${targetCharacter.images[0]}`}
                   alt={targetCharacter.name}
                 />
               )}

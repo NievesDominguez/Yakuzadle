@@ -1,21 +1,21 @@
 import { useState, useEffect, useRef } from "react";
+import { getCharacterList } from "../services/api";
 
-function GuessInput({ onGuess, onError }) {
+function GuessInput({ onGuess, onError, difficulty, guessedNames }) {
   const [value, setValue] = useState("");
   const [allItems, setAllItems] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const inputRef = useRef(null);
 
   useEffect(() => {
-    const cached = localStorage.getItem("characterListV2");
+    const cached = localStorage.getItem("characterListV3");
     if (cached) {
-      setAllItems(JSON.parse(cached));
+      setAllItems(JSON.parse(cached));  // guardar items completos, no solo nombres  
     } else {
-      fetch(`${import.meta.env.VITE_API_BASE_URL}/list`)
-        .then((res) => res.json())
-        .then((data) => {
+      getCharacterList()
+        .then(data => {
           setAllItems(data);
-          localStorage.setItem("characterListV2", JSON.stringify(data));
+          localStorage.setItem("characterListV3", JSON.stringify(data));
         })
         .catch(() => onError("Failed to load character list"));
     }
@@ -32,6 +32,9 @@ function GuessInput({ onGuess, onError }) {
 
     const f = allItems
       .map((item) => {
+        // Filtrar por nombre, aliases y apodos, ignorando los ya adivinados y los personajes exclusivos según la dificultad
+        if (guessedNames && guessedNames.includes(item.name)) return null;
+        if (difficulty === "normal" && item.kiwamiOnly) return null;
         // Comprobar si el nombre principal coincide  
         if (item.name.toLowerCase().includes(lower)) {
           return { ...item, matchedAlias: null };
