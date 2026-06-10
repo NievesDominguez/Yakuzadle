@@ -154,7 +154,8 @@ function compareCharacters(user, target) {
     blood_type: compareValue(user.blood_type, target.blood_type),
     fighting_style: compareFightingStyles(user.fighting_style || [], target.fighting_style || []),
     height: compareHeight(user.height, target.height),
-    date_of_birth: compareBirth(user.date_of_birth, target.date_of_birth)
+    date_of_birth: compareBirth(user.date_of_birth, target.date_of_birth),
+    gender: compareValue(user.gender || "M", target.gender || "M"),
   };
 }
 module.exports = { compareCharacters };

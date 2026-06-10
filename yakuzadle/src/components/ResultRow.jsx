@@ -1,5 +1,6 @@
 function ResultRow({ guess, target }) {
   const fields = [
+    ["gender", "Gender"],
     ["affiliation", "Affiliation"],
     ["nationality", "Nationality/Heritage"],
     ["games", "Games"],

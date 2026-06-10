@@ -14,6 +14,7 @@ function ResultTable({ guesses, target }) {
     <div className="table">
       <div className="header-row">
         <div className="header-cell">Character</div>
+        <div className="header-cell">Gender</div>
         <div className="header-cell">Affiliation</div>
         <div className="header-cell">Nationality/Heritage</div>
         <div className="header-cell">Games*</div>
