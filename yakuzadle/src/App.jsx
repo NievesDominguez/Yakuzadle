@@ -19,8 +19,6 @@ import {
 // Utilidades de estadísticas
 const STATS_KEY = (difficulty) => `yakuzadle_stats_${difficulty}`;
 
-const [isLoading, setIsLoading] = useState(false);  // Controla si la lista de personajes se está cargando
-
 const defaultStats = () => ({
   gamesPlayed: 0,
   wins: 0,
@@ -112,6 +110,8 @@ function App() {
   const [stats, setStats] = useState(() => loadStats("normal"));
   // Controla la visibilidad del modal de estadísticas  
   const [showStats, setShowStats] = useState(false);
+  // Controla si la lista de personajes se está cargando
+  const [isLoading, setIsLoading] = useState(false);
 
   // Carga inicial de la lista de personajes con caché de 24h  
   useEffect(() => {
