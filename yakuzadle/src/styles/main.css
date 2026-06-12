@@ -1,8 +1,4 @@
-/* yakuzadle/src/styles/main.css */
-
-/* ===========================  
-   CONTENEDOR PRINCIPAL  
-   =========================== */
+/* CONTENEDOR PRINCIPAL */
 .page {
   width: 100%;
   min-height: 100vh;
@@ -12,9 +8,7 @@
   justify-content: flex-start;
 }
 
-/* ===========================  
-   BLOQUE SUPERIOR CENTRADO  
-   =========================== */
+/* BLOQUE SUPERIOR CENTRADO */
 .top-container {
   width: 100%;
   display: flex;
@@ -26,9 +20,7 @@
   position: relative;
 }
 
-/* ===========================  
-   TÍTULO + BUSCADOR  
-   =========================== */
+/* TÍTULO + BUSCADOR */
 .hero {
   display: flex;
   flex-direction: column;
@@ -59,9 +51,7 @@
   text-align: center;
 }
 
-/* ===========================  
-   BUSCADOR  
-   =========================== */
+/* BUSCADOR */
 .guess-form {
   display: flex;
   gap: 12px;
@@ -86,9 +76,7 @@
   cursor: pointer;
 }
 
-/* ===========================  
-   AUTOCOMPLETADO (imagen a la izquierda)  
-   =========================== */
+/* AUTOCOMPLETADO (imagen a la izquierda) */
 .autocomplete-wrapper {
   position: relative;
   width: 100%;
@@ -139,9 +127,7 @@
   background: #444;
 }
 
-/* ===========================  
-   TABLA DE RESULTADOS  
-   =========================== */
+/* TABLA DE RESULTADOS */
 .bottom-container {
   width: 100%;
   display: flex;
@@ -287,9 +273,7 @@
   padding-top: 8px;
 }
 
-/* ===========================  
-   ANIMACIONES  
-   =========================== */
+/* ANIMACIONES */
 @keyframes flipReveal {
   0% {
     transform: perspective(800px) rotateY(180deg);
@@ -326,9 +310,7 @@
   }
 }
 
-/* ===========================  
-   CELEBRACIÓN  
-   =========================== */
+/* CELEBRACIÓN */
 .celebration {
   display: flex;
   flex-direction: column;
@@ -365,9 +347,7 @@
   }
 }
 
-/* ===========================  
-   ALINEACIÓN IZQUIERDA PARA CELDAS DE LISTAS  
-   =========================== */
+/* ALINEACIÓN IZQUIERDA PARA CELDAS DE LISTAS */
 .cell.left-align {
   justify-content: flex-start !important;
   padding-left: 16px;
@@ -392,9 +372,7 @@
   font-weight: bold;
 }
 
-/* ===========================  
-   TOAST NOTIFICATIONS  
-   =========================== */
+/* TOAST NOTIFICATIONS */
 .toast {
   position: fixed;
   bottom: 30px;
@@ -435,9 +413,7 @@
   }
 }
 
-/* ===========================  
-   ATTEMPTS COUNTER  
-   =========================== */
+/* CONTADOR DE INTENTOS */
 .attempts-counter {
   position: absolute;
   top: 20px;
@@ -471,9 +447,7 @@ F .debug-button {
   background: #777;
 }
 
-/* ===========================  
-   BOTÓN RENDIRSE  
-   =========================== */
+/* BOTÓN RENDIRSE */
 .surrender-button {
   padding: 10px 22px;
   font-size: 0.95rem;
@@ -495,9 +469,7 @@ F .debug-button {
   transform: translateY(-1px);
 }
 
-/* ===========================  
-   PANTALLA DE RENDICIÓN  
-   =========================== */
+/* PANTALLA DE RENDICIÓN */
 .surrender-screen {
   display: flex;
   flex-direction: column;
@@ -546,9 +518,7 @@ F .debug-button {
   font-style: italic;
 }
 
-/* ===========================    
-   SELECTOR DE DIFICULTAD    
-   =========================== */
+/* SELECTOR DE DIFICULTAD */
 .difficulty-label {
   font-size: 1rem;
   color: #c7c7c7;
@@ -592,9 +562,7 @@ F .debug-button {
   color: white;
 }
 
-/* ===========================  
-   BOTONES DE ACCIÓN (Hint + Give up)  
-   =========================== */
+/* BOTONES DE ACCIÓN (Hint + Give up) */
 .action-bar {
   display: flex;
   gap: 12px;
@@ -603,9 +571,7 @@ F .debug-button {
   padding: 0.75rem 1rem 0;
 }
 
-/* ===========================  
-   BOTÓN PISTA  
-   =========================== */
+/* BOTÓN PISTA */
 .hint-button {
   padding: 10px 22px;
   font-size: 0.95rem;
@@ -625,9 +591,7 @@ F .debug-button {
   transform: translateY(-1px);
 }
 
-/* ===========================  
-   ÁREA DE PISTAS  
-   =========================== */
+/* ÁREA DE PISTAS */
 .hints-container {
   display: flex;
   flex-direction: column;
@@ -666,9 +630,7 @@ F .debug-button {
 }
 
 
-/* ===========================  
-   ÁREA DE PISTAS (entre barra y tabla)  
-   =========================== */
+/* ÁREA DE PISTAS (entre barra y tabla) */
 .hints-area {
   display: flex;
   justify-content: center;
