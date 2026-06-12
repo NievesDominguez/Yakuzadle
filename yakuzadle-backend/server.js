@@ -1,16 +1,32 @@
-const express = require("express");
+const express = require("express");  
 const cors = require("cors");
-const { db } = require("./firestore.js");
-const { compareCharacters } = require("./compare.js");
-const https = require("https");
+const helmet = require("helmet");  
+const rateLimit = require("express-rate-limit");  
+const { db } = require("./firestore.js");  
+const { compareCharacters } = require("./compare.js");  
+const https = require("https");  
 
-const app = express();
-app.use(cors());
+// Configurar CORS para permitir solo los dominios de la app frontend, y solo métodos GET
+app.use(cors({  
+  origin: ["https://yakuzadle.web.app", "https://yakuzadle.firebaseapp.com"],  
+  methods: ["GET"],  
+}));  
+
+app.use(helmet()); // Usar Helmet para configurar cabeceras de seguridad
+
+// Limitar a 30 peticiones por IP por minuto para prevenir abuso
+app.use(rateLimit({  
+  windowMs: 60 * 1000, // 1 minuto  
+  max: 30,             // máximo 30 peticiones por IP por minuto  
+  message: { error: "Too many requests, please slow down." },  
+  standardHeaders: true,  
+  legacyHeaders: false,  
+}));  
 app.use(express.json());
 
 let normalCharacterNames = []; // Personajes sin campo difficulty  
 let kiwamiCharacterNames = []; // Todos los personajes  
-let characterDataCache = {};   // Datos completos cacheados para /list  
+let characterDataCache = {};   // Datos completos cacheados para /list
 
 // Dos cachés independientes, una por dificultad  
 let dailyTargets = {
@@ -217,18 +233,26 @@ app.get("/health", (req, res) => {
 });
 
 
-// Endpoint para servir imágenes directamente desde GitHub (proxy simple)
-app.get("/images/:filename", (req, res) => {
-  const filename = req.params.filename;
-  const githubUrl = `https://raw.githubusercontent.com/NievesDominguez/Yakuzadle/main/img_yakuzadle/${encodeURIComponent(filename)}`;
-  https.get(githubUrl, (imgRes) => {
-    res.setHeader("Content-Type", imgRes.headers["content-type"] || "image/png");
-    imgRes.pipe(res);
-  }).on("error", () => res.status(404).send("Image not found"));
+// Endpoint para servir imágenes directamente desde GitHub (proxy simple)  
+app.get("/images/:filename", (req, res) => {  
+  const filename = req.params.filename;  
+  
+  // Solo permite nombres de archivo seguros con extensión .png
+  if (!/^[\w\-]+\.png$/.test(filename)) {  
+    return res.status(400).send("Invalid filename");  
+  }  
+  
+  // Construye la URL directa al archivo en GitHub y lo sirve como proxy para evitar problemas de CORS en el frontend
+  const githubUrl = `https://raw.githubusercontent.com/NievesDominguez/Yakuzadle/main/img_yakuzadle/${encodeURIComponent(filename)}`;  
+  // Realiza una solicitud HTTPS al archivo en GitHub y lo transmite al cliente con el tipo de contenido correcto
+  https.get(githubUrl, (imgRes) => {  
+    res.setHeader("Content-Type", imgRes.headers["content-type"] || "image/png");  
+    imgRes.pipe(res);  
+  }).on("error", () => res.status(404).send("Image not found"));  
 });
 
 
-// Inicializar: cargar nombres y arrancar servidor  
+// Cargar nombres y arrancar servidor
 loadCharacterNames().then(() => {
   const PORT = process.env.PORT || 3001;
   app.listen(PORT, () => {
