@@ -158,10 +158,17 @@
 
 .header-row,
 .row {
-  display: grid;
   grid-template-columns:
-    1.2fr 0.6fr 1.4fr 1.2fr 2fr 0.75fr 1.6fr 0.85fr 1.2fr;
-  gap: 12px;
+    1.2fr    /* Character */
+    0.7fr    /* Gender */
+    1.5fr    /* Affiliation */
+    1.0fr    /* Nationality/Heritage */
+    2.0fr    /* Games */
+    0.75fr   /* Blood Type */
+    1.6fr    /* Fighting Style */
+    1.0fr    /* Height */
+    1.0fr;   /* Birthdate */
+  min-width: 0;        /* Evita expansión por contenido largo */
 }
 
 .header-cell {
@@ -931,27 +938,28 @@
 .header-row,
 .row {
   grid-template-columns: 1.2fr 0.6fr 1.4fr 1.2fr 2fr 0.75fr 1.6fr 0.85fr 1.2fr;
-  min-width: 0;
-  /* Evita expansión por contenido */
+  min-width: 0; /* Evita expansión por contenido */
 }
 
-/* Mejora el scroll horizontal en móviles */
+/* Contenedor de la tabla */
 .results {
   width: 100%;
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  -webkit-overflow-scrolling: touch;  /* Scroll suave en iOS */
+  display: flex;
+  justify-content: center;
 }
 
+/* Tabla base */
 .table {
   width: 100%;
-  min-width: 800px;
-  /* Mantiene anchos mínimos para legibilidad */
+  min-width: 720px;
+  margin: 0 auto;
 }
 
 
 @media (max-width: 640px) {
   .table {
-    min-width: 700px;
-    /* Un poco más estrecho, pero sigue permitiendo scroll */
+    min-width: 640px;
   }
 }

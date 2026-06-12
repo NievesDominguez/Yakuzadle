@@ -53,6 +53,7 @@ function GuessInput({ onGuess, onError, difficulty, guessedNames }) {
     setFiltered(f.slice(0, 8));
   };
 
+  // Al seleccionar un personaje de las sugerencias, hacer el guess y limpiar el input
   const selectItem = (item) => {
     setFiltered([]);
     onGuess(item.name);
@@ -60,6 +61,7 @@ function GuessInput({ onGuess, onError, difficulty, guessedNames }) {
     inputRef.current?.focus();
   };
 
+  // Al hacer submit, usar el valor del input para hacer el guess
   const submit = (e) => {
     e.preventDefault();
     if (!value.trim()) return;
@@ -69,8 +71,10 @@ function GuessInput({ onGuess, onError, difficulty, guessedNames }) {
     inputRef.current?.focus();
   };
 
+
   return (
     <div className="autocomplete-wrapper">
+    {/* Formulario de adivinanza con el input y el botón, y debajo las sugerencias filtradas */}
       <form onSubmit={submit} className="guess-form">
         <input
           ref={inputRef}
@@ -82,6 +86,7 @@ function GuessInput({ onGuess, onError, difficulty, guessedNames }) {
         />
         <button className="guess-button">Guess</button>
       </form>
+      {/* Sugerencias de personajes que coinciden con el input, mostrando imagen, nombre y alias coincidente */}
       {filtered.length > 0 && (
         <div className="autocomplete-box">
           {filtered.map((item, i) => (
