@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const { db } = require("./firestore.js");
 const { compareCharacters } = require("./compare.js");
+const https = require("https");
 
 const app = express();
 app.use(cors());
@@ -145,9 +146,7 @@ app.get("/list", (req, res) => {
     const image = data.images && data.images.length > 0 ? data.images[0] : null;
     return {
       name,
-      image: image
-        ? `https://raw.githubusercontent.com/NievesDominguez/Yakuzadle/main/img_yakuzadle/${image}`
-        : null,
+      image: image ? `/images/${image}` : null,
       aliases: data.aliases || [],
       nicknames: data.nicknames || [],
       kiwamiOnly: !!data.difficulty,
@@ -213,8 +212,19 @@ app.get("/hint", async (req, res) => {
 
 
 // Endpoint de salud para monitoreo
-app.get("/health", (req, res) => {  
-  res.json({ status: "ok" });  
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
+
+
+// Endpoint para servir imágenes directamente desde GitHub (proxy simple)
+app.get("/images/:filename", (req, res) => {
+  const filename = req.params.filename;
+  const githubUrl = `https://raw.githubusercontent.com/NievesDominguez/Yakuzadle/main/img_yakuzadle/${encodeURIComponent(filename)}`;
+  https.get(githubUrl, (imgRes) => {
+    res.setHeader("Content-Type", imgRes.headers["content-type"] || "image/png");
+    imgRes.pipe(res);
+  }).on("error", () => res.status(404).send("Image not found"));
 });
 
 

@@ -1,3 +1,6 @@
+import { IMAGE_BASE_URL } from "../services/api";
+
+
 function ResultRow({ guess, target }) {
   const fields = [
     ["gender", "Gender"],
@@ -50,9 +53,9 @@ function ResultRow({ guess, target }) {
   };
 
   const imageUrl = guess.character?.images?.[0]
-    ? `https://raw.githubusercontent.com/NievesDominguez/Yakuzadle/main/img_yakuzadle/${guess.character.images[0]}`
+    ? `${IMAGE_BASE_URL}${guess.character.images[0]}`
     : null;
-
+    
   const EXCLUDED_GAME = "Ryu Ga Gotoku Online";
   const userGames = guess.character?.games || [];
   const targetGames = target?.appears_in || [];
