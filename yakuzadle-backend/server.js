@@ -9,7 +9,7 @@ const app = express();
 
 // Configurar CORS para permitir solo los dominios de la app frontend, y solo métodos GET
 app.use(cors({  
-  origin: ["https://yakuzadle.web.app", "https://yakuzadle.firebaseapp.com"],  
+  origin: ["https://yamaibot.web.app", "https://yamaibot.firebaseapp.com"],  
   methods: ["GET"],  
 }));  
 
@@ -243,6 +243,9 @@ app.get("/images/:filename", (req, res) => {
     return res.status(400).send("Invalid filename");  
   }  
   
+  // Permitir que estas imágenes se usen en contextos cross-origin (como el frontend) sin bloquearlas por políticas de seguridad del navegador
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+
   // Construye la URL directa al archivo en GitHub y lo sirve como proxy para evitar problemas de CORS en el frontend
   const githubUrl = `https://raw.githubusercontent.com/NievesDominguez/Yakuzadle/main/img_yakuzadle/${encodeURIComponent(filename)}`;  
   // Realiza una solicitud HTTPS al archivo en GitHub y lo transmite al cliente con el tipo de contenido correcto
