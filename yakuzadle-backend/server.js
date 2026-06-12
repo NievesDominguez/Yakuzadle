@@ -5,6 +5,7 @@ const rateLimit = require("express-rate-limit");
 const { db } = require("./firestore.js");  
 const { compareCharacters } = require("./compare.js");  
 const https = require("https");  
+const app = express();
 
 // Configurar CORS para permitir solo los dominios de la app frontend, y solo métodos GET
 app.use(cors({  
