@@ -432,7 +432,7 @@
   gap: 8px;
 }
 
-F .debug-button {
+.debug-button {
   background: #555;
   border: none;
   color: white;
@@ -909,5 +909,50 @@ F .debug-button {
 
   .character-name {
     font-size: 0.78rem;
+  }
+}
+
+/* Evita que el contenido desborde y ensanche las columnas */
+.header-cell,
+.cell,
+.character-cell-static {
+  min-width: 0;
+  /* Permite que el contenido se recorte/envuelva */
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Para la primera columna (imagen + nombre) también */
+.character-cell-static {
+  min-width: 0;
+}
+
+/* Asegura que la cuadrícula se respete en todo momento */
+.header-row,
+.row {
+  grid-template-columns: 1.2fr 0.6fr 1.4fr 1.2fr 2fr 0.75fr 1.6fr 0.85fr 1.2fr;
+  min-width: 0;
+  /* Evita expansión por contenido */
+}
+
+/* Mejora el scroll horizontal en móviles */
+.results {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  width: 100%;
+  min-width: 800px;
+  /* Mantiene anchos mínimos para legibilidad */
+  /* resto igual */
+}
+
+
+@media (max-width: 640px) {
+  .table {
+    min-width: 700px;
+    /* Un poco más estrecho, pero sigue permitiendo scroll */
   }
 }
