@@ -140,12 +140,14 @@
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  display: flex;
+  justify-content: center;
 }
 
 .table {
   width: 100%;
+  min-width: 720px;
   max-width: 1600px;
-  min-width: 800px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -158,17 +160,28 @@
 
 .header-row,
 .row {
+  display: grid;
   grid-template-columns:
     1.2fr    /* Character */
-    0.7fr    /* Gender */
-    1.5fr    /* Affiliation */
-    1.0fr    /* Nationality/Heritage */
+    0.7fr    /* Gender (un poco más ancho) */
+    1.5fr    /* Affiliation (más ancho) */
+    1.0fr    /* Nationality/Heritage (más estrecho) */
     2.0fr    /* Games */
     0.75fr   /* Blood Type */
     1.6fr    /* Fighting Style */
-    1.0fr    /* Height */
-    1.0fr;   /* Birthdate */
-  min-width: 0;        /* Evita expansión por contenido largo */
+    1.0fr    /* Height (más ancho) */
+    1.0fr;   /* Birthdate (más estrecho) */
+  gap: 12px;
+  min-width: 0;          /* Evita expansión por contenido largo */
+}
+
+/* Forzar que las celdas respeten la cuadrícula */
+.header-cell,
+.cell,
+.character-cell-static {
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .header-cell {
@@ -637,7 +650,6 @@
   margin: 0;
 }
 
-
 /* ÁREA DE PISTAS (entre barra y tabla) */
 .hints-area {
   display: flex;
@@ -645,7 +657,6 @@
   padding: 0.5rem 1rem;
   width: 100%;
 }
-
 
 /* Modal de estadísticas */
 .header-actions {
@@ -748,7 +759,6 @@
   transition: width 0.3s ease;
 }
 
-
 /* Responsive - tablets */
 @media (max-width: 768px) {
   .title {
@@ -817,6 +827,12 @@
 }
 
 /* Responsive - móviles */
+@media (max-width: 640px) {
+  .table {
+    min-width: 640px;
+  }
+}
+
 @media (max-width: 480px) {
   .title {
     font-size: 2.2rem;
@@ -916,50 +932,5 @@
 
   .character-name {
     font-size: 0.78rem;
-  }
-}
-
-/* Evita que el contenido desborde y ensanche las columnas */
-.header-cell,
-.cell,
-.character-cell-static {
-  min-width: 0;
-  /* Permite que el contenido se recorte/envuelva */
-  overflow-wrap: break-word;
-  word-break: break-word;
-}
-
-/* Para la primera columna (imagen + nombre) también */
-.character-cell-static {
-  min-width: 0;
-}
-
-/* Asegura que la cuadrícula se respete en todo momento */
-.header-row,
-.row {
-  grid-template-columns: 1.2fr 0.6fr 1.4fr 1.2fr 2fr 0.75fr 1.6fr 0.85fr 1.2fr;
-  min-width: 0; /* Evita expansión por contenido */
-}
-
-/* Contenedor de la tabla */
-.results {
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;  /* Scroll suave en iOS */
-  display: flex;
-  justify-content: center;
-}
-
-/* Tabla base */
-.table {
-  width: 100%;
-  min-width: 720px;
-  margin: 0 auto;
-}
-
-
-@media (max-width: 640px) {
-  .table {
-    min-width: 640px;
   }
 }
