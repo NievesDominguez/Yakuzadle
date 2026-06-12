@@ -19,6 +19,8 @@ import {
 // Utilidades de estadísticas
 const STATS_KEY = (difficulty) => `yakuzadle_stats_${difficulty}`;
 
+const [isLoading, setIsLoading] = useState(false);  // Controla si la lista de personajes se está cargando
+
 const defaultStats = () => ({
   gamesPlayed: 0,
   wins: 0,
@@ -127,6 +129,7 @@ function App() {
           localStorage.setItem("characterListV3_cachedAt", String(Date.now()));
           setCharacterNames(data.map(item => item.name));
         })
+        .catch(() => showToastMessage("Error loading character list."));
     }
   }, []);
 
@@ -151,6 +154,9 @@ function App() {
   };
 
   const handleGuess = async (name) => {
+    // Evitar hacer múltiples peticiones si no se ha cargado la lista de personajes o sise está procesando otro guess
+    if (isLoading) return;
+    setIsLoading(true);
     try {
       const data = await guessCharacter(name, difficulty);
 
@@ -192,6 +198,8 @@ function App() {
     } catch (error) {
       console.error("Error submitting guess:", error);
       showToastMessage("Network error. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -355,6 +363,7 @@ function App() {
               onError={showToastMessage}
               difficulty={difficulty}
               guessedNames={guesses.map(g => g.name)}
+              isLoading={isLoading}  
             />
           ) : showCelebration ? (
             <Celebration onPlayAgain={handlePlayAgain} />

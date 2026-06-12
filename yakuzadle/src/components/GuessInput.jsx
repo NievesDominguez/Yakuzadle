@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { getCharacterList } from "../services/api";
 
-function GuessInput({ onGuess, onError, difficulty, guessedNames }) {
+function GuessInput({ onGuess, onError, difficulty, guessedNames, isLoading }) {
   const [value, setValue] = useState("");
   const [allItems, setAllItems] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -83,8 +83,9 @@ function GuessInput({ onGuess, onError, difficulty, guessedNames }) {
           value={value}
           onChange={handleChange}
           className="guess-input"
+          disabled={isLoading}
         />
-        <button className="guess-button">Guess</button>
+        <button className="guess-button" disabled={isLoading}>Guess</button>
       </form>
       {/* Sugerencias de personajes que coinciden con el input, mostrando imagen, nombre y alias coincidente */}
       {filtered.length > 0 && (
