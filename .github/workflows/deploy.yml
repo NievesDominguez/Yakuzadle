@@ -26,7 +26,7 @@ jobs:
         run: |  
           cd yakuzadle  
           npm run build
-        env:  
+        env:
           VITE_BUILD_HASH: ${{ github.sha }}
   
       - name: Deploy to Firebase Hosting  

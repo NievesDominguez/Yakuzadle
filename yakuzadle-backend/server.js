@@ -9,23 +9,27 @@ const https = require("https");
 const app = express();
 
 // Configurar CORS para permitir solo los dominios de la app frontend, y solo métodos GET
-app.use(cors({  
-  origin: ["https://yamaibot.web.app", "https://yamaibot.firebaseapp.com"],  
-  methods: ["GET"],  
-}));  
+app.use(cors({
+  origin: ["https://yamaibot.web.app", "https://yamaibot.firebaseapp.com"],
+  methods: ["GET"],
+}));
 
-app.use(helmet()); // Usar Helmet para configurar cabeceras de seguridad
+// Usar Helmet para configurar cabeceras de seguridad
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginEmbedderPolicy: false,
+}));
 
 app.use(compression()); // Comprimir respuestas para mejorar rendimiento
 
-// Limitar a 30 peticiones por IP por minuto para prevenir abuso
-app.use(rateLimit({  
+// Limitar a 60 peticiones por IP por minuto para prevenir abuso
+app.use(rateLimit({
   windowMs: 60 * 1000, // 1 minuto  
-  max: 30,             // máximo 30 peticiones por IP por minuto  
-  message: { error: "Too many requests, please slow down." },  
-  standardHeaders: true,  
-  legacyHeaders: false,  
-}));  
+  max: 60,             // Máximo 60 peticiones por IP por minuto  
+  message: { error: "Too many requests, please slow down." },
+  standardHeaders: true,
+  legacyHeaders: false,
+}));
 app.use(express.json());
 
 let normalCharacterNames = []; // Personajes sin campo difficulty  
@@ -238,19 +242,19 @@ app.get("/health", (req, res) => {
 
 
 // Endpoint para servir imágenes directamente desde GitHub (proxy simple)  
-app.get("/images/:filename", (req, res) => {  
-  const filename = req.params.filename;  
-  
+app.get("/images/:filename", (req, res) => {
+  const filename = req.params.filename;
+
   // Solo permite nombres de archivo seguros con extensión .png
   if (!/^[\w\-]+\.png$/.test(filename)) {
     return res.status(400).send("Invalid filename");
-  }  
-  
+  }
+
   // Permitir que estas imágenes se usen en contextos cross-origin (como el frontend) sin bloquearlas por políticas de seguridad del navegador
   res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
 
   // Construye la URL directa al archivo en GitHub y lo sirve como proxy para evitar problemas de CORS en el frontend
-  const githubUrl = `https://raw.githubusercontent.com/NievesDominguez/Yakuzadle/main/img_yakuzadle/${encodeURIComponent(filename)}`;  
+  const githubUrl = `https://raw.githubusercontent.com/NievesDominguez/Yakuzadle/main/img_yakuzadle/${encodeURIComponent(filename)}`;
   // Realiza una solicitud HTTPS al archivo en GitHub y lo transmite al cliente con el tipo de contenido correcto
   https.get(githubUrl, (imgRes) => {
     res.setHeader("Content-Type", imgRes.headers["content-type"] || "image/png");
