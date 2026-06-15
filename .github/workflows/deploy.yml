@@ -25,7 +25,9 @@ jobs:
       - name: Build frontend  
         run: |  
           cd yakuzadle  
-          npm run build  
+          npm run build
+        env:  
+          VITE_BUILD_HASH: ${{ github.sha }}
   
       - name: Deploy to Firebase Hosting  
         uses: w9jds/firebase-action@master  

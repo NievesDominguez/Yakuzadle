@@ -19,6 +19,9 @@ import {
 // Utilidades de estadísticas
 const STATS_KEY = (difficulty) => `yakuzadle_stats_${difficulty}`;
 
+const CACHE_KEY = `characterList_${import.meta.env.VITE_BUILD_HASH || "dev"}`;  
+const CACHE_KEY_AT = `${CACHE_KEY}_cachedAt`;
+
 const defaultStats = () => ({
   gamesPlayed: 0,
   wins: 0,
@@ -112,8 +115,8 @@ function App() {
 
   // Carga inicial de la lista de personajes con caché de 24h  
   useEffect(() => {
-    const cached = localStorage.getItem("characterListV3");
-    const cachedAt = localStorage.getItem("characterListV3_cachedAt");
+    const cached = localStorage.getItem(CACHE_KEY);
+    const cachedAt = localStorage.getItem(CACHE_KEY_AT);
     const ONE_DAY_MS = 24 * 60 * 60 * 1000;
     const isExpired = !cachedAt || (Date.now() - Number(cachedAt)) > ONE_DAY_MS;
 
@@ -125,8 +128,8 @@ function App() {
     else {
       getCharacterList()
         .then(data => {
-          localStorage.setItem("characterListV3", JSON.stringify(data));
-          localStorage.setItem("characterListV3_cachedAt", String(Date.now()));
+          localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+          localStorage.setItem(CACHE_KEY_AT, String(Date.now()));
           setCharacterNames(data.map(item => item.name));
         })
         .catch(() => showToastMessage("Error loading character list."));

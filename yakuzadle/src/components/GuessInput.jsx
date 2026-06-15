@@ -7,16 +7,18 @@ function GuessInput({ onGuess, onError, difficulty, guessedNames, isLoading }) {
   const [allItems, setAllItems] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const inputRef = useRef(null);
+  // Clave de caché basada en el hash de compilación para invalidar la caché en nuevas versiones
+  const CACHE_KEY = `characterList_${import.meta.env.VITE_BUILD_HASH || "dev"}`;
 
   useEffect(() => {
-    const cached = localStorage.getItem("characterListV3");
+    const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
-      setAllItems(JSON.parse(cached));  // guardar items completos, no solo nombres  
+      setAllItems(JSON.parse(cached));  // Guardar items completos, no solo nombres  
     } else {
       getCharacterList()
         .then(data => {
           setAllItems(data);
-          localStorage.setItem("characterListV3", JSON.stringify(data));
+          localStorage.setItem(CACHE_KEY, JSON.stringify(data));
         })
         .catch(() => onError("Failed to load character list"));
     }
