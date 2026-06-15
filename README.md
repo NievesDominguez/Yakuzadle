@@ -1,6 +1,7 @@
 # Yakuzadle  
   
 Juego diario de adivinanzas al estilo Wordle ambientado en el universo de la saga *Like a Dragon* (anteriormente *Yakuza*). Cada día aparece un personaje misterioso y el jugador debe identificarlo a través de diversas pistas.
+
 **Pruébalo: https://yamaibot.web.app/**
   
 ## Cómo se juega  
