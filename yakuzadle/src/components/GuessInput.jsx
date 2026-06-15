@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { getCharacterList } from "../services/api";
+import { IMAGE_BASE_URL } from "../services/api";
 
 function GuessInput({ onGuess, onError, difficulty, guessedNames, isLoading }) {
   const [value, setValue] = useState("");
@@ -97,7 +98,7 @@ function GuessInput({ onGuess, onError, difficulty, guessedNames, isLoading }) {
               onClick={() => selectItem(item)}
             >
               {item.image ? (
-                <img src={item.image} alt={item.name} className="suggestion-img" />
+                <img src={`${IMAGE_BASE_URL}${item.image}`} alt={item.name} className="suggestion-img" />
               ) : (
                 <div className="suggestion-img-placeholder"></div>
               )}

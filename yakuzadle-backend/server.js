@@ -166,7 +166,7 @@ app.get("/list", (req, res) => {
     const image = data.images && data.images.length > 0 ? data.images[0] : null;
     return {
       name,
-      image: image ? `/images/${image}` : null,
+      image: image || null,
       aliases: data.aliases || [],
       nicknames: data.nicknames || [],
       kiwamiOnly: !!data.difficulty,
