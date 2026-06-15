@@ -94,24 +94,21 @@ function saveSession(difficulty, state) {
 function App() {
   const initialSession = loadSession("normal");
 
-  const [guesses, setGuesses] = useState(initialSession?.guesses ?? []);
-  const [targetCharacter, setTargetCharacter] = useState(initialSession?.targetCharacter ?? null);
-  const [gameWon, setGameWon] = useState(initialSession?.gameWon ?? false);
-  const [showCelebration, setShowCelebration] = useState(false); // no persistir, es visual  
-  const [attempts, setAttempts] = useState(initialSession?.attempts ?? 0);
-  const [gameSurrendered, setGameSurrendered] = useState(initialSession?.gameSurrendered ?? false);
-  const [usedHintFields, setUsedHintFields] = useState(initialSession?.usedHintFields ?? []);
-  const [hints, setHints] = useState(initialSession?.hints ?? []);
-  const [toast, setToast] = useState({ message: "", show: false });
-  const [characterNames, setCharacterNames] = useState([]);
-  const [difficulty, setDifficulty] = useState("normal");
+  const [guesses, setGuesses] = useState(initialSession?.guesses ?? []); // Lista de intentos del jugador
+  const [targetCharacter, setTargetCharacter] = useState(initialSession?.targetCharacter ?? null); // Personaje objetivo del día
+  const [gameWon, setGameWon] = useState(initialSession?.gameWon ?? false); // Controla si el jugador ha ganado
+  const [showCelebration, setShowCelebration] = useState(false); // Controla la animación de celebración al ganar
+  const [attempts, setAttempts] = useState(initialSession?.attempts ?? 0); // Número de intentos realizados
+  const [gameSurrendered, setGameSurrendered] = useState(initialSession?.gameSurrendered ?? false); // Controla si el jugador se ha rendido
+  const [usedHintFields, setUsedHintFields] = useState(initialSession?.usedHintFields ?? []); // Campos de pistas ya utilizados
+  const [hints, setHints] = useState(initialSession?.hints ?? []); // Lista de pistas obtenidas
+  const [toast, setToast] = useState({ message: "", show: false }); // Estado para mostrar mensajes de error o información al jugador
+  const [characterNames, setCharacterNames] = useState([]); // Lista de nombres de personajes cargada desde la API
+  const [difficulty, setDifficulty] = useState("normal"); // Dificultad actual del juego (normal o kiwami)
 
-  // Estadísticas del jugador para la dificultad actual  
-  const [stats, setStats] = useState(() => loadStats("normal"));
-  // Controla la visibilidad del modal de estadísticas  
-  const [showStats, setShowStats] = useState(false);
-  // Controla si la lista de personajes se está cargando
-  const [isLoading, setIsLoading] = useState(false);
+  const [stats, setStats] = useState(() => loadStats("normal")); // Estadísticas del jugador para la dificultad actual  
+  const [showStats, setShowStats] = useState(false); // Controla la visibilidad del modal de estadísticas  
+  const [isLoading, setIsLoading] = useState(false); // Controla si la lista de personajes se está cargando
 
   // Carga inicial de la lista de personajes con caché de 24h  
   useEffect(() => {
@@ -120,9 +117,12 @@ function App() {
     const ONE_DAY_MS = 24 * 60 * 60 * 1000;
     const isExpired = !cachedAt || (Date.now() - Number(cachedAt)) > ONE_DAY_MS;
 
+    // Si hay datos de los personajes en caché y no han expirado, se usan
     if (cached && !isExpired) {
       setCharacterNames(JSON.parse(cached).map(item => item.name));
-    } else {
+    }
+    // Si no, se hace la petición a la API para obtener la lista de personajes y se guarda en caché
+    else {
       getCharacterList()
         .then(data => {
           localStorage.setItem("characterListV3", JSON.stringify(data));
@@ -133,15 +133,19 @@ function App() {
     }
   }, []);
 
+  // Función para mostrar mensajes de error o información al jugador
   const showToastMessage = (msg) => {
     setToast({ message: msg, show: true });
   };
 
+  // Maneja el cambio de dificultad del juego
   const handleDifficultyChange = (newDifficulty) => {
+    // Evita cambiar a la misma dificultad
     if (newDifficulty === difficulty) return;
     setDifficulty(newDifficulty);
     setStats(loadStats(newDifficulty));
 
+    // Carga la sesión guardada para la nueva dificultad, si existe, o reinicia el estado del juego
     const session = loadSession(newDifficulty);
     setGuesses(session?.guesses ?? []);
     setGameWon(session?.gameWon ?? false);
@@ -153,25 +157,28 @@ function App() {
     setHints(session?.hints ?? []);
   };
 
+  // Maneja el intento de adivinar un personaje
   const handleGuess = async (name) => {
-    // Evitar hacer múltiples peticiones si no se ha cargado la lista de personajes o sise está procesando otro guess
+    // Evitar hacer múltiples peticiones si no se ha cargado la lista de personajes o si se está procesando otro guess
     if (isLoading) return;
     setIsLoading(true);
     try {
       const data = await guessCharacter(name, difficulty);
 
+      // Maneja el caso en que la API devuelve un error (personaje no encontrado)
       if (data.error) {
         showToastMessage("Character not found");
         return;
       }
 
+      // Si no se ha establecido el personaje objetivo, se establece con el que devuelve la API
       if (!targetCharacter) {
         setTargetCharacter(data.target);
       }
 
+      // Comprueba si el intento es correcto comparando el nombre del personaje con el objetivo y suma el intento
       const isCorrect = data.character.name === data.target.name;
       const newAttempts = attempts + 1;
-
       const newGuesses = [...guesses, { name: data.character.name, character: data.character, comparison: data.result }];
       setGuesses(newGuesses);
       setAttempts(newAttempts);
@@ -185,6 +192,7 @@ function App() {
         hints,
       });
 
+      // Si el intento es correcto y el juego no se ha ganado aún, se actualizan las estadísticas y se muestra la celebración
       if (isCorrect && !gameWon) {
         setGameWon(true);
         const updated = updateStats(difficulty, true, newAttempts);
@@ -203,12 +211,14 @@ function App() {
     }
   };
 
+  // Maneja la acción de rendirse
   const handleSurrender = async () => {
     if (targetCharacter) {
       const updated = updateStats(difficulty, false, attempts);
       setStats(updated);
       setGameSurrendered(true);
 
+      // Guardar la sesión con el estado de rendición
       saveSession(difficulty, {
         guesses,
         attempts,
@@ -227,6 +237,7 @@ function App() {
       setStats(updated);
       setGameSurrendered(true);
 
+      // Guardar la sesión con el estado de rendición
       saveSession(difficulty, {
         guesses,
         attempts,
@@ -242,6 +253,7 @@ function App() {
     }
   };
 
+  // Reinicia el juego para jugar de nuevo
   const handlePlayAgain = () => {
     setGuesses([]);
     setGameWon(false);
@@ -253,6 +265,7 @@ function App() {
     setHints([]);
   };
 
+  // Función para establecer un nuevo objetivo aleatorio en modo debug
   const handleDebugNewTarget = async () => {
     if (characterNames.length === 0) {
       showToastMessage("No characters loaded");
@@ -274,8 +287,11 @@ function App() {
     }
   };
 
+  // Maneja la solicitud de una pista
   const handleHint = async () => {
+    // Campos de pistas posibles
     const HINT_FIELDS = ["affiliation", "nationality", "games", "fighting_style", "height", "date_of_birth"];
+    // Filtra los campos de pistas que ya han sido utilizados o que ya se han adivinado correctamente
     const correctFields = HINT_FIELDS.filter((field) =>
       guesses.some((g) => g.comparison?.[field] === "green")
     );
@@ -284,11 +300,13 @@ function App() {
     try {
       const data = await getHint(difficulty, allUsed);
 
+      // Si todos los campos de pistas han sido utilizados, muestra un mensaje y no solicita más pistas
       if (data.noHints) {
         showToastMessage("No hints available");
         return;
       }
 
+      // Muestra el valor de la pista, ya sea como un array o un string
       const displayValue = Array.isArray(data.value) ? data.value.join(", ") : data.value;
 
       const fieldLabels = {
@@ -300,6 +318,7 @@ function App() {
         date_of_birth: "Birthdate",
       };
 
+      // Actualiza los campos de pistas utilizados y las pistas obtenidas, y guarda la sesión
       const newUsedHintFields = [...usedHintFields, data.field];
       const newHints = [...hints, { field: fieldLabels[data.field], value: displayValue }];
       setUsedHintFields(newUsedHintFields);
@@ -363,7 +382,7 @@ function App() {
               onError={showToastMessage}
               difficulty={difficulty}
               guessedNames={guesses.map(g => g.name)}
-              isLoading={isLoading}  
+              isLoading={isLoading}
             />
           ) : showCelebration ? (
             <Celebration onPlayAgain={handlePlayAgain} />
