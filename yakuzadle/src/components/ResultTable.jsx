@@ -24,11 +24,12 @@ function ResultTable({ guesses, target }) {
         <div className="header-cell">Birthdate</div>
       </div>
 
-      {guesses.map((g, i) => (
+      <div ref={tableRef} />
+
+      {[...guesses].reverse().map((g, i) => (
         <ResultRow key={i} guess={g} target={target} />
       ))}
 
-      <div ref={tableRef} />
 
       <div className="table-footer">
         * Ryu Ga Gotoku Online does not count for color comparison. If it matches, it appears in <strong>bold</strong>.
