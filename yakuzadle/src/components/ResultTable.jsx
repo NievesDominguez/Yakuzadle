@@ -26,8 +26,8 @@ function ResultTable({ guesses, target }) {
 
       <div ref={tableRef} />
 
-      {[...guesses].reverse().map((g, i) => (
-        <ResultRow key={i} guess={g} target={target} />
+      {[...guesses].reverse().map((g) => (
+        <ResultRow key={g.name} guess={g} target={target} />
       ))}
 
 
