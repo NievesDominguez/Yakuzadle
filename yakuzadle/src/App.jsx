@@ -44,18 +44,18 @@ function saveStats(difficulty, stats) {
   localStorage.setItem(STATS_KEY(difficulty), JSON.stringify(stats));
 }
 
-// Actualiza las estadísticas al terminar una partida.  
-// won: true si ganó, false si se rindió. attempts: número de intentos (solo relevante si won).  
+// Actualiza las estadísticas al terminar una partida
 function updateStats(difficulty, won, attempts) {
   const stats = loadStats(difficulty);
   const today = new Date().toISOString().split("T")[0];
 
-  // Evitar contar la misma partida dos veces si el jugador recarga  
+  // Evitar contar la misma partida dos veces si el jugador recarga
   if (stats.lastPlayedDate === today) return stats;
 
   stats.gamesPlayed += 1;
   stats.lastPlayedDate = today;
 
+  // Actualiza estadísticas según si ganó o se rindió
   if (won) {
     stats.wins += 1;
     stats.currentStreak += 1;
@@ -252,7 +252,7 @@ function App() {
       });
     } catch (error) {
       console.error("Error fetching daily target on surrender:", error);
-      showToastMessage("No se pudo obtener el personaje del día.");
+      showToastMessage("Could not fetch daily target.");
     }
   };
 
