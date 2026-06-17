@@ -11,7 +11,7 @@ function StatsModal({ stats, difficulty, onClose }) {
         <button className="stats-modal-close" onClick={onClose}>  
           ✕  
         </button>  
-        <h2>Statistics — {difficulty === "kiwami" ? "Kiwami" : "Normal"}</h2>  
+        <h2>Statistics — {difficulty === "kiwami" ? "Kiwami" : difficulty === "infinite" ? "Infinite" : "Normal"}</h2>
         <div className="stats-summary">  
           <div className="stats-item">  
             <span>{stats.gamesPlayed}</span>  

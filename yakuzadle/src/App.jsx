@@ -335,7 +335,11 @@ function App() {
     const allUsed = [...new Set([...usedHintFields, ...correctFields])];
 
     try {
-      const data = await getHint(difficulty, allUsed);
+      const data = await getHint(
+        difficulty === "infinite" ? "kiwami" : difficulty,
+        allUsed,
+        difficulty === "infinite" ? infiniteTarget : null
+      );
 
       // Si todos los campos de pistas han sido utilizados, muestra un mensaje y no solicita más pistas
       if (data.noHints) {
