@@ -19,7 +19,7 @@ import {
 // Utilidades de estadísticas
 const STATS_KEY = (difficulty) => `yakuzadle_stats_${difficulty}`;
 
-const CACHE_KEY = `characterList_${import.meta.env.VITE_BUILD_HASH || "dev"}`;  
+const CACHE_KEY = `characterList_${import.meta.env.VITE_BUILD_HASH || "dev"}`;
 const CACHE_KEY_AT = `${CACHE_KEY}_cachedAt`;
 
 const defaultStats = () => ({
@@ -109,6 +109,8 @@ function App() {
   const [characterNames, setCharacterNames] = useState([]); // Lista de nombres de personajes cargada desde la API
   const [difficulty, setDifficulty] = useState("normal"); // Dificultad actual del juego (normal o kiwami)
 
+  const [infiniteTarget, setInfiniteTarget] = useState(null); // Nombre del personaje objetivo en modo infinito
+
   const [stats, setStats] = useState(() => loadStats("normal")); // Estadísticas del jugador para la dificultad actual  
   const [showStats, setShowStats] = useState(false); // Controla la visibilidad del modal de estadísticas  
   const [isLoading, setIsLoading] = useState(false); // Controla si la lista de personajes se está cargando
@@ -143,21 +145,52 @@ function App() {
 
   // Maneja el cambio de dificultad del juego
   const handleDifficultyChange = (newDifficulty) => {
-    // Evita cambiar a la misma dificultad
     if (newDifficulty === difficulty) return;
     setDifficulty(newDifficulty);
     setStats(loadStats(newDifficulty));
-
-    // Carga la sesión guardada para la nueva dificultad, si existe, o reinicia el estado del juego
-    const session = loadSession(newDifficulty);
-    setGuesses(session?.guesses ?? []);
-    setGameWon(session?.gameWon ?? false);
-    setGameSurrendered(session?.gameSurrendered ?? false);
+    setGuesses([]);
+    setGameWon(false);
+    setGameSurrendered(false);
     setShowCelebration(false);
-    setAttempts(session?.attempts ?? 0);
-    setTargetCharacter(session?.targetCharacter ?? null);
-    setUsedHintFields(session?.usedHintFields ?? []);
-    setHints(session?.hints ?? []);
+    setAttempts(0);
+    setTargetCharacter(null);
+    setUsedHintFields([]);
+    setHints([]);
+
+    if (newDifficulty === "infinite") {
+      const randomName = pickRandomInfiniteTarget(characterNames);
+      setInfiniteTarget(randomName);
+    } else {
+      setInfiniteTarget(null);
+      const session = loadSession(newDifficulty);
+      setGuesses(session?.guesses ?? []);
+      setGameWon(session?.gameWon ?? false);
+      setGameSurrendered(session?.gameSurrendered ?? false);
+      setAttempts(session?.attempts ?? 0);
+      setTargetCharacter(session?.targetCharacter ?? null);
+      setUsedHintFields(session?.usedHintFields ?? []);
+      setHints(session?.hints ?? []);
+    }
+  };
+
+  // Función para seleccionar un personaje objetivo aleatorio en modo infinito
+  function pickRandomInfiniteTarget(names) {
+    if (!names || names.length === 0) return null;
+    return names[Math.floor(Math.random() * names.length)];
+  }
+
+  // Maneja el cambio de objetivo en modo infinito
+  const handleChangeTarget = () => {
+    const randomName = pickRandomInfiniteTarget(characterNames);
+    setInfiniteTarget(randomName);
+    setGuesses([]);
+    setGameWon(false);
+    setGameSurrendered(false);
+    setShowCelebration(false);
+    setAttempts(0);
+    setTargetCharacter(null);
+    setUsedHintFields([]);
+    setHints([]);
   };
 
   // Maneja el intento de adivinar un personaje
@@ -166,7 +199,7 @@ function App() {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const data = await guessCharacter(name, difficulty);
+      const data = await guessCharacter(name, difficulty === "infinite" ? "kiwami" : difficulty, infiniteTarget);
 
       // Maneja el caso en que la API devuelve un error (personaje no encontrado)
       if (data.error) {
@@ -217,30 +250,31 @@ function App() {
   // Maneja la acción de rendirse
   const handleSurrender = async () => {
     if (targetCharacter) {
-      const updated = updateStats(difficulty, false, attempts);
-      setStats(updated);
+      if (difficulty !== "infinite") {
+        const updated = updateStats(difficulty, false, attempts);
+        setStats(updated);
+      }
       setGameSurrendered(true);
-
-      // Guardar la sesión con el estado de rendición
-      saveSession(difficulty, {
-        guesses,
-        attempts,
-        gameWon: false,
-        gameSurrendered: true,
-        targetCharacter: targetCharacter,
-        usedHintFields,
-        hints,
-      });
+      if (difficulty !== "infinite") {
+        saveSession(difficulty, {
+          guesses,
+          attempts,
+          gameWon: false,
+          gameSurrendered: true,
+          targetCharacter,
+          usedHintFields,
+          hints,
+        });
+      }
       return;
     }
+    // Solo aplica si no se ha establecido el personaje objetivo, para normal y kiwami
     try {
       const data = await getDailyTarget(difficulty);
       setTargetCharacter(data);
       const updated = updateStats(difficulty, false, attempts);
       setStats(updated);
       setGameSurrendered(true);
-
-      // Guardar la sesión con el estado de rendición
       saveSession(difficulty, {
         guesses,
         attempts,
@@ -377,6 +411,12 @@ function App() {
             >
               Kiwami
             </button>
+            <button
+              className={`difficulty-btn ${difficulty === "infinite" ? "active" : ""}`}
+              onClick={() => handleDifficultyChange("infinite")}
+            >
+              Infinite
+            </button>
           </div>
 
           {!gameWon && !gameSurrendered ? (
@@ -387,8 +427,24 @@ function App() {
               guessedNames={guesses.map(g => g.name)}
               isLoading={isLoading}
             />
-          ) : showCelebration ? (
+          ) : showCelebration && difficulty !== "infinite" ? (
             <Celebration onPlayAgain={handlePlayAgain} />
+          ) : gameWon && difficulty === "infinite" ? (
+            <div className="surrender-screen">
+              <h2>You got it!</h2>
+              <p>The character was:</p>
+              {targetCharacter?.images?.[0] && (
+                <img
+                  className="surrender-character-image"
+                  src={`${IMAGE_BASE_URL}${targetCharacter.images[0]}`}
+                  alt={targetCharacter.name}
+                />
+              )}
+              <p className="surrender-character-name">{targetCharacter?.name}</p>
+              <button className="guess-button" onClick={handleChangeTarget}>
+                🔄 Change Target
+              </button>
+            </div>
           ) : gameSurrendered ? (
             <div className="surrender-screen">
               <h2>You gave up</h2>
@@ -396,15 +452,20 @@ function App() {
               {targetCharacter?.images?.[0] && (
                 <img
                   className="surrender-character-image"
-                  /*src={`https://raw.githubusercontent.com/NievesDominguez/Yakuzadle/main/img_yakuzadle/${targetCharacter.images[0]}`}*/
                   src={`${IMAGE_BASE_URL}${targetCharacter.images[0]}`}
                   alt={targetCharacter.name}
                 />
               )}
               <p className="surrender-character-name">{targetCharacter?.name}</p>
-              <button className="guess-button" onClick={handlePlayAgain}>
-                Play Again
-              </button>
+              {difficulty === "infinite" ? (
+                <button className="guess-button" onClick={handleChangeTarget}>
+                  🔄 Change Target
+                </button>
+              ) : (
+                <button className="guess-button" onClick={handlePlayAgain}>
+                  Play Again
+                </button>
+              )}
             </div>
           ) : (
             <div className="waiting-message">✨ Revealing... ✨</div>

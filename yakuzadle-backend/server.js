@@ -141,15 +141,27 @@ app.get("/debug-set-target", async (req, res) => {
 
 // Endpoint para adivinar un personaje  
 app.get("/guess", async (req, res) => {
+  // Nombre del personaje que el usuario está adivinando
   const name = req.query.name;
+  // Dificultad: kiwami o normal, por defecto normal
   const difficulty = req.query.difficulty === "kiwami" ? "kiwami" : "normal";
+  // Nombre del personaje objetivo opcional, para el modo infinito
+  const targetName = req.query.targetName;
   if (!name) return res.status(400).json({ error: "Missing name" });
 
+  // Obtener el personaje del usuario desde la caché
   const userChar = getCharacter(name);
   if (!userChar) return res.status(404).json({ error: "Character not found" });
 
+  // Obtener el personaje objetivo, ya sea del día o especificado por nombre
   try {
-    const targetChar = await getDailyTarget(difficulty);
+    let targetChar;
+    if (targetName) {
+      targetChar = getCharacter(targetName);
+      if (!targetChar) return res.status(404).json({ error: "Target character not found" });
+    } else {
+      targetChar = await getDailyTarget(difficulty);
+    }
     const result = compareCharacters(userChar, targetChar);
     res.json({
       character: { ...userChar, games: userChar.appears_in, gender: userChar.gender || "M" },
@@ -157,7 +169,7 @@ app.get("/guess", async (req, res) => {
       target: { name: targetChar.name, images: targetChar.images || [] },
     });
   } catch (error) {
-    console.error("Error getting daily target:", error);
+    console.error("Error getting target:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -199,18 +211,30 @@ function getCharacter(name) {
 }
 
 
-// Muestra una pista aleatoria del personaje objetivo  
+// Muestra una pista aleatoria del personaje objetivo    
 app.get("/hint", async (req, res) => {
   const difficulty = req.query.difficulty === "kiwami" ? "kiwami" : "normal";
+  // Nombre del personaje objetivo opcional, para el modo infinito
+  const targetName = req.query.targetName || null;
+  // Campos que ya se han usado en pistas anteriores, para no repetirlos
   const usedFields = req.query.usedFields
     ? req.query.usedFields.split(",").filter(Boolean)
     : [];
 
-  const HINT_FIELDS = ["affiliation", "nationality", "games", "fighting_style", "height", "date_of_birth"];
+  // Campos que pueden ser usados como pistas
+  const HINT_FIELDS = ["games","affiliation", "nationality", "fighting_style", "height", "date_of_birth"];
 
   try {
-    const target = await getDailyTarget(difficulty);
+    // Obtener el personaje objetivo, ya sea del día o especificado por nombre
+    let target;
+    if (targetName) {
+      target = getCharacter(targetName);
+      if (!target) return res.status(404).json({ error: "Target character not found" });
+    } else {
+      target = await getDailyTarget(difficulty);
+    }
 
+    // Filtrar los campos que ya se han usado y que tienen valor válido en el personaje objetivo
     const available = HINT_FIELDS.filter((field) => {
       if (usedFields.includes(field)) return false;
       const value = field === "games" ? target.appears_in : target[field];
@@ -220,6 +244,7 @@ app.get("/hint", async (req, res) => {
       return true;
     });
 
+    // Comprobar si hay campos disponibles para dar una pista
     if (available.length === 0) {
       return res.json({ noHints: true });
     }

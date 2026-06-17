@@ -14,8 +14,9 @@ async function safeFetch(url) {
 }
 
 // Funciones para interactuar con la API del backend
-export async function guessCharacter(name, difficulty) {
-  return safeFetch(`${API_BASE}/guess?name=${encodeURIComponent(name)}&difficulty=${difficulty}`);
+export async function guessCharacter(name, difficulty, targetName = null) {
+  const targetParam = targetName ? `&targetName=${encodeURIComponent(targetName)}` : "";
+  return safeFetch(`${API_BASE}/guess?name=${encodeURIComponent(name)}&difficulty=${difficulty}${targetParam}`);
 }
 
 export async function getCharacterList() {
@@ -26,8 +27,9 @@ export async function getDailyTarget(difficulty) {
   return safeFetch(`${API_BASE}/daily-target?difficulty=${difficulty}`);
 }
 
-export async function getHint(difficulty, usedFields) {
-  return safeFetch(`${API_BASE}/hint?difficulty=${difficulty}&usedFields=${usedFields.join(",")}`);
+export async function getHint(difficulty, usedFields, targetName = null) {
+  const targetParam = targetName ? `&targetName=${encodeURIComponent(targetName)}` : "";
+  return safeFetch(`${API_BASE}/hint?difficulty=${difficulty}&usedFields=${usedFields.join(",")}${targetParam}`);
 }
 
 export async function setDebugTarget(name, difficulty) {
