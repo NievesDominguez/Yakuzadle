@@ -472,7 +472,7 @@ function App() {
               )}
             </div>
           ) : (
-            <div className="waiting-message">✨ Revealing... ✨</div>
+            <div className="waiting-message">🎉 You got it! 🎉</div>
           )}
         </header>
 
