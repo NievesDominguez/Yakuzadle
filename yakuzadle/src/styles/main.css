@@ -62,7 +62,6 @@
   padding: 12px 16px;
   font-size: 1.1rem;
   width: 320px;
-  max-width: 90vw;
   border-radius: 8px;
   border: 1px solid #555;
 }
@@ -77,7 +76,7 @@
   cursor: pointer;
 }
 
-/* AUTOCOMPLETADO (imagen a la izquierda) */
+/* AUTOCOMPLETADO */
 .autocomplete-wrapper {
   position: relative;
   width: 100%;
@@ -143,12 +142,11 @@
   -webkit-overflow-scrolling: touch;
   display: flex;
   justify-content: center;
-  padding: 0 1rem;
-  box-sizing: border-box;
 }
 
 .table {
   width: 100%;
+  min-width: 720px;
   max-width: 1600px;
   margin: 0 auto;
   display: flex;
@@ -158,29 +156,25 @@
   border-radius: 10px;
   padding: 1rem;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
-  padding-left: 1rem;
-  padding-right: 1rem;
 }
 
 .header-row,
 .row {
   display: grid;
   grid-template-columns:
-    minmax(160px, 1.2fr)    /* Character */
-    minmax(80px, 0.7fr)     /* Gender (un poco más ancho) */
-    minmax(180px, 1.5fr)    /* Affiliation (más ancho) */
-    minmax(110px, 1.0fr)    /* Nationality/Heritage (más estrecho) */
-    minmax(200px, 2.0fr)    /* Games */
-    minmax(80px, 0.75fr)    /* Blood Type */
-    minmax(160px, 1.6fr)    /* Fighting Style */
-    minmax(100px, 1.0fr)    /* Height (más ancho) */
-    minmax(100px, 1.0fr);   /* Birthdate (más estrecho) */
+    1.2fr
+    0.7fr
+    1.5fr
+    1.0fr
+    2.0fr
+    0.75fr
+    1.6fr
+    1.0fr
+    1.0fr;
   gap: 12px;
   min-width: 0;
-  width: 100%;
 }
 
-/* Forzar que las celdas respeten la cuadrícula */
 .header-cell,
 .cell,
 .character-cell-static {
@@ -203,7 +197,6 @@
   justify-content: center;
 }
 
-/* Celdas de datos (con animación flip) */
 .cell {
   padding: 12px;
   border-radius: 6px;
@@ -224,27 +217,14 @@
   font-size: 0.9rem;
 }
 
-/* Variables de color final para cada tipo */
-.color-cell.green {
-  --final-bg: #2e7d32;
-}
-
-.color-cell.yellow {
-  --final-bg: #d4a017;
-}
-
-.color-cell.red {
-  --final-bg: #c62828;
-}
-
+.color-cell.green  { --final-bg: #2e7d32; }
+.color-cell.yellow { --final-bg: #d4a017; }
+.color-cell.red    { --final-bg: #c62828; }
 .color-cell.higher,
 .color-cell.lower,
 .color-cell.older,
-.color-cell.younger {
-  --final-bg: #c62828;
-}
+.color-cell.younger { --final-bg: #c62828; }
 
-/* Celda de personaje: estática */
 .character-cell-static {
   display: flex;
   flex-direction: column;
@@ -289,7 +269,6 @@
   max-width: 100%;
 }
 
-/* Pie de tabla */
 .table-footer {
   margin-top: 16px;
   font-size: 0.85rem;
@@ -301,39 +280,15 @@
 
 /* ANIMACIONES */
 @keyframes flipReveal {
-  0% {
-    transform: perspective(800px) rotateY(180deg);
-    background-color: #333;
-    opacity: 0;
-  }
-
-  80% {
-    transform: perspective(800px) rotateY(36deg);
-    background-color: #333;
-    opacity: 0;
-  }
-
-  85% {
-    transform: perspective(800px) rotateY(27deg);
-    background-color: var(--final-bg, #333);
-    opacity: 1;
-  }
-
-  100% {
-    transform: perspective(800px) rotateY(0deg);
-    background-color: var(--final-bg, #333);
-    opacity: 1;
-  }
+  0%   { transform: perspective(800px) rotateY(180deg); background-color: #333; opacity: 0; }
+  80%  { transform: perspective(800px) rotateY(36deg);  background-color: #333; opacity: 0; }
+  85%  { transform: perspective(800px) rotateY(27deg);  background-color: var(--final-bg, #333); opacity: 1; }
+  100% { transform: perspective(800px) rotateY(0deg);   background-color: var(--final-bg, #333); opacity: 1; }
 }
 
 @keyframes revealCharacter {
-  0% {
-    background-color: #333;
-  }
-
-  100% {
-    background-color: var(--character-final-bg, #333);
-  }
+  0%   { background-color: #333; }
+  100% { background-color: var(--character-final-bg, #333); }
 }
 
 /* CELEBRACIÓN */
@@ -362,18 +317,10 @@
 }
 
 @keyframes pulse {
-
-  0%,
-  100% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.05);
-  }
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.05); }
 }
 
-/* ALINEACIÓN IZQUIERDA PARA CELDAS DE LISTAS */
 .cell.left-align {
   justify-content: flex-start !important;
   padding-left: 16px;
@@ -398,7 +345,7 @@
   font-weight: bold;
 }
 
-/* TOAST NOTIFICATIONS */
+/* TOAST */
 .toast {
   position: fixed;
   bottom: 30px;
@@ -426,17 +373,9 @@
   line-height: 1;
 }
 
-/* Animación para que el toast aparezca desde abajo con un pequeño desplazamiento */
 @keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translate(-50%, 20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
+  from { opacity: 0; transform: translate(-50%, 20px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
 }
 
 /* CONTADOR DE INTENTOS */
@@ -574,21 +513,19 @@
   color: #fff;
 }
 
-/* Normal activo: dorado relleno */
 .difficulty-btn.active {
   border-color: #e8b923;
   background: #e8b923;
   color: #1a1a1a;
 }
 
-/* Kiwami activo: rojo relleno*/
 .difficulty-btn.active[data-difficulty="kiwami"] {
   border-color: #c62828;
   background: #c62828;
   color: white;
 }
 
-/* BOTONES DE ACCIÓN (Hint + Give up) */
+/* BOTONES DE ACCIÓN */
 .action-bar {
   display: flex;
   gap: 12px;
@@ -597,7 +534,6 @@
   padding: 0.75rem 1rem 0;
 }
 
-/* BOTÓN PISTA */
 .hint-button {
   padding: 10px 22px;
   font-size: 0.95rem;
@@ -617,7 +553,7 @@
   transform: translateY(-1px);
 }
 
-/* ÁREA DE PISTAS */
+/* PISTAS */
 .hints-container {
   display: flex;
   flex-direction: column;
@@ -655,7 +591,6 @@
   margin: 0;
 }
 
-/* ÁREA DE PISTAS (entre barra y tabla) */
 .hints-area {
   display: flex;
   justify-content: center;
@@ -663,7 +598,7 @@
   width: 100%;
 }
 
-/* Modal de estadísticas */
+/* MODAL DE ESTADÍSTICAS */
 .header-actions {
   display: flex;
   justify-content: flex-end;
@@ -764,15 +699,13 @@
   transition: width 0.3s ease;
 }
 
-/* Responsive - tablets */
+/* =============================================
+   RESPONSIVE — TABLETS (≤768px)
+   ============================================= */
 @media (max-width: 768px) {
-  .title {
-    font-size: 2.8rem;
-  }
+  .title { font-size: 2.8rem; }
 
-  .top-container {
-    padding: 1.5rem 1rem 1rem;
-  }
+  .top-container { padding: 1.5rem 1rem 1rem; }
 
   .attempts-counter {
     font-size: 0.85rem;
@@ -786,9 +719,7 @@
     font-size: 1rem;
   }
 
-  .autocomplete-wrapper {
-    max-width: 280px;
-  }
+  .autocomplete-wrapper { max-width: 280px; }
 
   .table {
     min-width: 700px;
@@ -796,197 +727,133 @@
     padding: 0.75rem;
   }
 
-  .header-row,
-  .row {
-    gap: 8px;
-  }
+  .header-row, .row { gap: 8px; }
 
-  .header-cell {
-    padding: 8px 6px;
-    font-size: 0.78rem;
-  }
+  .header-cell { padding: 8px 6px; font-size: 0.78rem; }
 
-  .cell {
-    padding: 8px 6px;
-    min-height: 40px;
-  }
+  .cell { padding: 8px 6px; min-height: 40px; }
 
-  .cell-text {
-    font-size: 0.8rem;
-  }
+  .cell-text { font-size: 0.8rem; }
 
-  .character-cell-static {
-    padding: 8px 6px;
-    min-height: 80px;
-  }
+  .character-cell-static { padding: 8px 6px; min-height: 80px; }
 
   .character-image,
-  .character-image-placeholder {
-    width: 48px;
-    height: 48px;
-  }
+  .character-image-placeholder { width: 48px; height: 48px; }
 
-  .character-name {
-    font-size: 0.85rem;
-  }
+  .character-name { font-size: 0.85rem; }
 }
 
-/* Responsive - tablets pequeños */
-@media (max-width: 640px) {
-  .table {
-    min-width: 100%;
-  }
+/* =============================================
+   RESPONSIVE — MÓVIL (≤600px)
+   La tabla pasa a layout de tarjetas apiladas
+   ============================================= */
+@media (max-width: 600px) {
+  .title { font-size: 2.2rem; }
+  .subtitle { font-size: 0.75rem; }
 
-  .header-row,
-  .row {
-    grid-template-columns:
-      minmax(140px, 1.0fr)    /* Character */
-      minmax(70px, 0.6fr)     /* Gender */
-      minmax(160px, 1.2fr)    /* Affiliation */
-      minmax(90px, 0.8fr)     /* Nationality */
-      minmax(180px, 1.6fr)    /* Games */
-      minmax(70px, 0.65fr)    /* Blood Type */
-      minmax(140px, 1.3fr)    /* Fighting Style */
-      minmax(90px, 0.8fr)     /* Height */
-      minmax(90px, 0.8fr);    /* Birthdate */
-  }
-}
+  .top-container { padding: 1rem 0.75rem 0.75rem; }
 
-@media (max-width: 480px) {
-  .title {
-    font-size: 2.2rem;
-  }
-
-  .subtitle {
-    font-size: 0.75rem;
-  }
-
-  .top-container {
-    padding: 1rem 0.75rem 0.75rem;
-  }
-
+  /* El contador de intentos pasa a inline dentro del hero, 
+     no absoluto, para no tapar el título */
   .attempts-counter {
-    font-size: 0.78rem;
-    padding: 5px 10px;
-    top: 10px;
-    right: 10px;
+    position: static;
+    align-self: center;
+    font-size: 0.8rem;
+    padding: 5px 12px;
   }
 
-  .guess-form {
-    flex-wrap: wrap;
-    width: 100%;
-    gap: 8px;
-  }
+  .guess-form { flex-direction: column; align-items: stretch; width: 100%; }
+  .guess-input { width: 100%; font-size: 1rem; }
+  .guess-button { width: 100%; }
 
-  .guess-input {
-    width: 100%;
-    max-width: 100%;
-    font-size: 0.95rem;
-  }
+  .autocomplete-wrapper { max-width: 100%; width: 100%; }
+  .autocomplete-box { top: auto; }
 
-  .autocomplete-wrapper {
-    max-width: 100%;
-    width: 100%;
-  }
+  .difficulty-selector { flex-wrap: wrap; justify-content: center; }
+  .difficulty-btn { padding: 8px 14px; font-size: 0.9rem; }
 
-  .autocomplete-box {
-    max-height: 150px;
-  }
+  .action-bar { flex-wrap: wrap; padding: 0.5rem 0.75rem 0; }
 
-  .difficulty-selector {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 6px;
-  }
+  .hints-container { min-width: unset; max-width: 100%; }
 
-  .difficulty-btn {
-    padding: 8px 16px;
-    font-size: 0.9rem;
-  }
+  .celebration h2 { font-size: 1.8rem; text-align: center; }
+  .surrender-screen h2 { font-size: 1.5rem; text-align: center; }
 
-  .action-bar {
-    flex-wrap: wrap;
-    padding: 0.5rem 0.5rem 0;
-    gap: 8px;
-  }
-
-  .hint-button,
-  .surrender-button {
-    flex: 1;
-    min-width: 120px;
-    padding: 10px 16px;
-  }
-
-  .hints-container {
-    min-width: unset;
-    max-width: 100%;
-    width: calc(100% - 2rem);
-  }
-
-  .celebration h2 {
-    font-size: 1.8rem;
-    text-align: center;
-  }
-
-  .surrender-screen h2 {
-    font-size: 1.5rem;
-    text-align: center;
-  }
+  /* La tabla deja de ser un grid horizontal y pasa a tarjetas */
+  .results { overflow-x: unset; }
 
   .table {
-    gap: 6px;
-    padding: 0.5rem;
     min-width: unset;
-    width: calc(100% - 1rem);
+    width: 100%;
+    gap: 16px;
+    padding: 0.75rem;
   }
 
-  .header-row,
+  /* Ocultar la fila de cabeceras: en móvil cada celda lleva su propia etiqueta */
+  .header-row { display: none; }
+
+  /* Cada guess pasa a ser una tarjeta vertical */
   .row {
-    gap: 6px;
-    grid-template-columns:
-      minmax(120px, 0.9fr)    /* Character */
-      minmax(60px, 0.5fr)     /* Gender */
-      minmax(140px, 1.0fr)    /* Affiliation */
-      minmax(80px, 0.7fr)     /* Nationality */
-      minmax(160px, 1.3fr)    /* Games */
-      minmax(60px, 0.55fr)    /* Blood Type */
-      minmax(120px, 1.1fr)    /* Fighting Style */
-      minmax(80px, 0.7fr)     /* Height */
-      minmax(80px, 0.7fr);    /* Birthdate */
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
-  .header-cell {
-    padding: 6px 4px;
-    font-size: 0.7rem;
-  }
-
-  .cell {
-    padding: 6px 4px;
-    min-height: 36px;
-  }
-
-  .cell-text {
-    font-size: 0.72rem;
-  }
-
+  /* La celda del personaje va arriba, en horizontal */
   .character-cell-static {
-    padding: 6px 4px;
-    min-height: 70px;
-    gap: 4px;
+    flex-direction: row;
+    min-height: unset;
+    padding: 12px 16px;
+    gap: 12px;
+    border-radius: 0;
+    justify-content: flex-start;
   }
 
   .character-image,
-  .character-image-placeholder {
-    width: 40px;
-    height: 40px;
-  }
+  .character-image-placeholder { width: 44px; height: 44px; }
 
-  .character-name {
-    font-size: 0.75rem;
-  }
+  .character-name { font-size: 1rem; text-align: left; }
 
-  .guess-button {
+  /* Cada celda de dato ocupa toda la fila con etiqueta a la izquierda y valor a la derecha */
+  .cell {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    min-height: unset;
     padding: 10px 16px;
-    font-size: 1rem;
+    border-radius: 0;
+    opacity: 0;
+    text-align: right;
+    /* Separador entre celdas */
+    border-top: 1px solid rgba(0, 0, 0, 0.15);
   }
+
+  /* Etiqueta de campo inyectada con data-label desde el CSS */
+  .cell::before {
+    content: attr(data-label);
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+    margin-right: 8px;
+    text-align: left;
+  }
+
+  .cell-text { font-size: 0.9rem; text-align: right; }
+
+  .cell.left-align {
+    align-items: flex-start;
+    padding: 10px 16px;
+  }
+
+  .cell.left-align .cell-text { text-align: right; }
+
+  .table-footer { font-size: 0.78rem; }
 }

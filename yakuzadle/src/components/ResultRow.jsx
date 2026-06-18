@@ -1,6 +1,5 @@
 import { IMAGE_BASE_URL } from "../services/api";
 
-
 function ResultRow({ guess, target }) {
   const fields = [
     ["gender", "Gender"],
@@ -13,7 +12,6 @@ function ResultRow({ guess, target }) {
     ["date_of_birth", "Birthdate"],
   ];
 
-  // Flechas para indicar si la altura y edad es mayor/menor
   const arrowFor = (key, color) => {
     if (key === "height") {
       if (color.includes("higher")) return "↓";
@@ -26,7 +24,6 @@ function ResultRow({ guess, target }) {
     return "";
   };
 
-  // Tooltip para altura y edad
   const tooltipFor = (key, color) => {
     if (key === "height") {
       if (color.includes("higher")) return "Target is shorter";
@@ -55,7 +52,7 @@ function ResultRow({ guess, target }) {
   const imageUrl = guess.character?.images?.[0]
     ? `${IMAGE_BASE_URL}${guess.character.images[0]}`
     : null;
-    
+
   const EXCLUDED_GAME = "Ryu Ga Gotoku Online";
   const userGames = guess.character?.games || [];
   const targetGames = target?.appears_in || [];
@@ -63,12 +60,10 @@ function ResultRow({ guess, target }) {
   const groupGames = (games) => {
     const grouped = [];
     const used = new Set();
-
     for (let i = 0; i < games.length; i++) {
       if (used.has(i)) continue;
       const game = games[i];
       let paired = false;
-
       const match = game.match(/^Yakuza(?:\s+(\d+))?$/);
       if (match) {
         const num = match[1] || "";
@@ -157,7 +152,7 @@ function ResultRow({ guess, target }) {
         <span className="character-name">{guess.name}</span>
       </div>
 
-      {fields.map(([key], i) => {
+      {fields.map(([key, label], i) => {
         const delay = i * delayStep;
         const rawColor = guess.comparison?.[key] || "red";
         let bgColor = rawColor;
@@ -175,6 +170,7 @@ function ResultRow({ guess, target }) {
               key={i}
               className={`cell color-cell ${bgColor} ${content ? "left-align" : ""}`}
               style={{ animationDelay: `${delay}s` }}
+              data-label={label}
             >
               <div className="cell-text">{content || "-"}</div>
             </div>
@@ -188,6 +184,7 @@ function ResultRow({ guess, target }) {
               key={i}
               className={`cell color-cell ${bgColor} ${content ? "left-align" : ""}`}
               style={{ animationDelay: `${delay}s` }}
+              data-label={label}
             >
               <div className="cell-text">{content || "-"}</div>
             </div>
@@ -201,6 +198,7 @@ function ResultRow({ guess, target }) {
               key={i}
               className={`cell color-cell ${bgColor} ${content ? "left-align" : ""}`}
               style={{ animationDelay: `${delay}s` }}
+              data-label={label}
             >
               <div className="cell-text">{content || "-"}</div>
             </div>
@@ -221,6 +219,7 @@ function ResultRow({ guess, target }) {
             className={`cell color-cell ${bgColor}`}
             style={{ animationDelay: `${delay}s` }}
             title={tooltip || undefined}
+            data-label={label}
           >
             <span className="cell-text">
               {text} {arrow}
