@@ -767,7 +767,7 @@
 
 /* Evitar scroll horizontal en la página — solo la tabla puede scrollear */
 html, body {
-  overflow-x: hidden;
+  overflow-x:scroll;
   max-width: 100%;
 }
 
