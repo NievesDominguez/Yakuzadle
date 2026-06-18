@@ -166,15 +166,15 @@
 .row {
   display: grid;
   grid-template-columns:
-    1.2fr    /* Character */
-    0.7fr    /* Gender (un poco más ancho) */
-    1.5fr    /* Affiliation (más ancho) */
-    1.0fr    /* Nationality/Heritage (más estrecho) */
-    2.0fr    /* Games */
-    0.75fr   /* Blood Type */
-    1.6fr    /* Fighting Style */
-    1.0fr    /* Height (más ancho) */
-    1.0fr;   /* Birthdate (más estrecho) */
+    minmax(160px, 1.2fr)    /* Character */
+    minmax(80px, 0.7fr)     /* Gender (un poco más ancho) */
+    minmax(180px, 1.5fr)    /* Affiliation (más ancho) */
+    minmax(110px, 1.0fr)    /* Nationality/Heritage (más estrecho) */
+    minmax(200px, 2.0fr)    /* Games */
+    minmax(80px, 0.75fr)    /* Blood Type */
+    minmax(160px, 1.6fr)    /* Fighting Style */
+    minmax(100px, 1.0fr)    /* Height (más ancho) */
+    minmax(100px, 1.0fr);   /* Birthdate (más estrecho) */
   gap: 12px;
   min-width: 0;
   width: 100%;
@@ -840,15 +840,15 @@
   .header-row,
   .row {
     grid-template-columns:
-      1.0fr    /* Character */
-      0.6fr    /* Gender */
-      1.2fr    /* Affiliation */
-      0.8fr    /* Nationality */
-      1.6fr    /* Games */
-      0.65fr   /* Blood Type */
-      1.3fr    /* Fighting Style */
-      0.8fr    /* Height */
-      0.8fr;   /* Birthdate */
+      minmax(140px, 1.0fr)    /* Character */
+      minmax(70px, 0.6fr)     /* Gender */
+      minmax(160px, 1.2fr)    /* Affiliation */
+      minmax(90px, 0.8fr)     /* Nationality */
+      minmax(180px, 1.6fr)    /* Games */
+      minmax(70px, 0.65fr)    /* Blood Type */
+      minmax(140px, 1.3fr)    /* Fighting Style */
+      minmax(90px, 0.8fr)     /* Height */
+      minmax(90px, 0.8fr);    /* Birthdate */
   }
 }
 
@@ -944,15 +944,15 @@
   .row {
     gap: 6px;
     grid-template-columns:
-      0.9fr    /* Character */
-      0.5fr    /* Gender */
-      1.0fr    /* Affiliation */
-      0.7fr    /* Nationality */
-      1.3fr    /* Games */
-      0.55fr   /* Blood Type */
-      1.1fr    /* Fighting Style */
-      0.7fr    /* Height */
-      0.7fr;   /* Birthdate */
+      minmax(120px, 0.9fr)    /* Character */
+      minmax(60px, 0.5fr)     /* Gender */
+      minmax(140px, 1.0fr)    /* Affiliation */
+      minmax(80px, 0.7fr)     /* Nationality */
+      minmax(160px, 1.3fr)    /* Games */
+      minmax(60px, 0.55fr)    /* Blood Type */
+      minmax(120px, 1.1fr)    /* Fighting Style */
+      minmax(80px, 0.7fr)     /* Height */
+      minmax(80px, 0.7fr);    /* Birthdate */
   }
 
   .header-cell {
