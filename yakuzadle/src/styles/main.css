@@ -166,15 +166,24 @@
 .row {
   display: grid;
   grid-template-columns:
-    1.2fr    /* Character */
-    0.7fr    /* Gender */
-    1.5fr    /* Affiliation */
-    1.0fr    /* Nationality/Heritage */
-    2.0fr    /* Games */
-    0.75fr   /* Blood Type */
-    1.6fr    /* Fighting Style */
-    1.0fr    /* Height (más ancho) */
-    1.0fr;   /* Birthdate */
+    1.2fr
+    /* Character */
+    0.7fr
+    /* Gender */
+    1.5fr
+    /* Affiliation */
+    1.0fr
+    /* Nationality/Heritage */
+    2.0fr
+    /* Games */
+    0.75fr
+    /* Blood Type */
+    1.6fr
+    /* Fighting Style */
+    1.0fr
+    /* Height (más ancho) */
+    1.0fr;
+  /* Birthdate */
   gap: 12px;
   min-width: 0;
   width: 100%;
@@ -766,16 +775,21 @@
 
 
 /* Evitar scroll horizontal en la página — solo la tabla puede scrollear */
-html, body {
-  overflow-x:scroll;
+html,
+body {
+  overflow-x: hidden;
   max-width: 100%;
 }
 
 /* RESPONSIVE — TABLETS (≤768px) */
 @media (max-width: 768px) {
-  .title { font-size: 2.8rem; }
+  .title {
+    font-size: 2.8rem;
+  }
 
-  .top-container { padding: 1.5rem 1rem 1rem; }
+  .top-container {
+    padding: 1.5rem 1rem 1rem;
+  }
 
   .attempts-counter {
     font-size: 0.85rem;
@@ -784,34 +798,68 @@ html, body {
     right: 12px;
   }
 
-  .guess-input { width: 240px; font-size: 1rem; }
+  .guess-input {
+    width: 240px;
+    font-size: 1rem;
+  }
 
-  .autocomplete-wrapper { max-width: 280px; }
+  .autocomplete-wrapper {
+    max-width: 280px;
+  }
 
-  .table { gap: 8px; padding: 0.75rem; }
+  .table {
+    gap: 8px;
+    padding: 0.75rem;
+  }
 
-  .header-row, .row { gap: 8px; }
+  .header-row,
+  .row {
+    gap: 8px;
+  }
 
-  .header-cell { padding: 8px 6px; font-size: 0.78rem; }
+  .header-cell {
+    padding: 8px 6px;
+    font-size: 0.78rem;
+  }
 
-  .cell { padding: 8px 6px; min-height: 40px; }
+  .cell {
+    padding: 8px 6px;
+    min-height: 40px;
+  }
 
-  .cell-text { font-size: 0.8rem; }
+  .cell-text {
+    font-size: 0.8rem;
+  }
 
-  .character-cell-static { padding: 8px 6px; min-height: 80px; }
+  .character-cell-static {
+    padding: 8px 6px;
+    min-height: 80px;
+  }
 
   .character-image,
-  .character-image-placeholder { width: 48px; height: 48px; }
+  .character-image-placeholder {
+    width: 48px;
+    height: 48px;
+  }
 
-  .character-name { font-size: 0.85rem; }
+  .character-name {
+    font-size: 0.85rem;
+  }
 }
 
 /* RESPONSIVE — MÓVIL (≤480px) */
 @media (max-width: 480px) {
-  .title { font-size: 2.2rem; }
-  .subtitle { font-size: 0.75rem; }
+  .title {
+    font-size: 2.2rem;
+  }
 
-  .top-container { padding: 1rem 0.75rem 0.75rem; }
+  .subtitle {
+    font-size: 0.75rem;
+  }
+
+  .top-container {
+    padding: 1rem 0.75rem 0.75rem;
+  }
 
   .attempts-counter {
     font-size: 0.78rem;
@@ -820,19 +868,45 @@ html, body {
     right: 10px;
   }
 
-  .guess-form { flex-wrap: wrap; width: 100%; }
-  .guess-input { width: 100%; font-size: 0.95rem; }
+  .guess-form {
+    flex-wrap: wrap;
+    width: 100%;
+  }
 
-  .autocomplete-wrapper { max-width: 100%; width: 100%; }
+  .guess-input {
+    width: 100%;
+    font-size: 0.95rem;
+  }
 
-  .difficulty-selector { flex-wrap: wrap; justify-content: center; }
+  .autocomplete-wrapper {
+    max-width: 100%;
+    width: 100%;
+  }
 
-  .action-bar { flex-wrap: wrap; padding: 0.5rem 0.75rem 0; }
+  .difficulty-selector {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 
-  .hints-container { min-width: unset; max-width: 100%; }
+  .action-bar {
+    flex-wrap: wrap;
+    padding: 0.5rem 0.75rem 0;
+  }
 
-  .celebration h2 { font-size: 1.8rem; text-align: center; }
-  .surrender-screen h2 { font-size: 1.5rem; text-align: center; }
+  .hints-container {
+    min-width: unset;
+    max-width: 100%;
+  }
+
+  .celebration h2 {
+    font-size: 1.8rem;
+    text-align: center;
+  }
+
+  .surrender-screen h2 {
+    font-size: 1.5rem;
+    text-align: center;
+  }
 
   /* La tabla mantiene un mínimo fijo y scrollea dentro de .results */
   .results {
@@ -843,25 +917,48 @@ html, body {
   }
 
   .table {
-    min-width: 680px; /* mínimo para que las columnas no se aplasten */
+    min-width: 680px;
+    /* mínimo para que las columnas no se aplasten */
     gap: 6px;
     padding: 0.5rem;
   }
 
-  .header-row, .row { gap: 6px; }
+  .header-row,
+  .row {
+    gap: 6px;
+  }
 
-  .header-cell { padding: 6px 4px; font-size: 0.7rem; }
+  .header-cell {
+    padding: 6px 4px;
+    font-size: 0.7rem;
+  }
 
-  .cell { padding: 6px 4px; min-height: 36px; }
+  .cell {
+    padding: 6px 4px;
+    min-height: 36px;
+  }
 
-  .cell-text { font-size: 0.72rem; }
+  .cell-text {
+    font-size: 0.72rem;
+  }
 
-  .character-cell-static { padding: 6px 4px; min-height: 70px; gap: 4px; }
+  .character-cell-static {
+    padding: 6px 4px;
+    min-height: 70px;
+    gap: 4px;
+  }
 
   .character-image,
-  .character-image-placeholder { width: 40px; height: 40px; }
+  .character-image-placeholder {
+    width: 40px;
+    height: 40px;
+  }
 
-  .character-name { font-size: 0.75rem; }
+  .character-name {
+    font-size: 0.75rem;
+  }
 
-  .table-footer { font-size: 0.75rem; }
+  .table-footer {
+    font-size: 0.75rem;
+  }
 }

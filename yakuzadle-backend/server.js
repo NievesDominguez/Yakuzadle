@@ -222,7 +222,7 @@ app.get("/hint", async (req, res) => {
     : [];
 
   // Campos que pueden ser usados como pistas
-  const HINT_FIELDS = ["games","affiliation", "nationality", "fighting_style", "height", "date_of_birth"];
+  const HINT_FIELDS = ["games", "affiliation", "nationality", "fighting_style", "height", "date_of_birth"];
 
   try {
     // Obtener el personaje objetivo, ya sea del día o especificado por nombre

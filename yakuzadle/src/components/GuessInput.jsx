@@ -77,7 +77,7 @@ function GuessInput({ onGuess, onError, difficulty, guessedNames, isLoading }) {
 
   return (
     <div className="autocomplete-wrapper">
-    {/* Formulario de adivinanza con el input y el botón, y debajo las sugerencias filtradas */}
+      {/* Formulario de adivinanza con el input y el botón, y debajo las sugerencias filtradas */}
       <form onSubmit={submit} className="guess-form">
         <input
           ref={inputRef}
