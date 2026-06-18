@@ -62,6 +62,7 @@
   padding: 12px 16px;
   font-size: 1.1rem;
   width: 320px;
+  max-width: 90vw;
   border-radius: 8px;
   border: 1px solid #555;
 }
@@ -76,7 +77,7 @@
   cursor: pointer;
 }
 
-/* AUTOCOMPLETADO */
+/* AUTOCOMPLETADO (imagen a la izquierda) */
 .autocomplete-wrapper {
   position: relative;
   width: 100%;
@@ -142,11 +143,12 @@
   -webkit-overflow-scrolling: touch;
   display: flex;
   justify-content: center;
+  padding: 0 1rem;
+  box-sizing: border-box;
 }
 
 .table {
   width: 100%;
-  min-width: 720px;
   max-width: 1600px;
   margin: 0 auto;
   display: flex;
@@ -156,25 +158,29 @@
   border-radius: 10px;
   padding: 1rem;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 .header-row,
 .row {
   display: grid;
   grid-template-columns:
-    1.2fr
-    0.7fr
-    1.5fr
-    1.0fr
-    2.0fr
-    0.75fr
-    1.6fr
-    1.0fr
-    1.0fr;
+    1.2fr    /* Character */
+    0.7fr    /* Gender */
+    1.5fr    /* Affiliation */
+    1.0fr    /* Nationality/Heritage */
+    2.0fr    /* Games */
+    0.75fr   /* Blood Type */
+    1.6fr    /* Fighting Style */
+    1.0fr    /* Height (más ancho) */
+    1.0fr;   /* Birthdate */
   gap: 12px;
   min-width: 0;
+  width: 100%;
 }
 
+/* Forzar que las celdas respeten la cuadrícula */
 .header-cell,
 .cell,
 .character-cell-static {
@@ -197,6 +203,7 @@
   justify-content: center;
 }
 
+/* Celdas de datos (con animación flip) */
 .cell {
   padding: 12px;
   border-radius: 6px;
@@ -217,14 +224,27 @@
   font-size: 0.9rem;
 }
 
-.color-cell.green  { --final-bg: #2e7d32; }
-.color-cell.yellow { --final-bg: #d4a017; }
-.color-cell.red    { --final-bg: #c62828; }
+/* Variables de color final para cada tipo */
+.color-cell.green {
+  --final-bg: #2e7d32;
+}
+
+.color-cell.yellow {
+  --final-bg: #d4a017;
+}
+
+.color-cell.red {
+  --final-bg: #c62828;
+}
+
 .color-cell.higher,
 .color-cell.lower,
 .color-cell.older,
-.color-cell.younger { --final-bg: #c62828; }
+.color-cell.younger {
+  --final-bg: #c62828;
+}
 
+/* Celda de personaje: estática */
 .character-cell-static {
   display: flex;
   flex-direction: column;
@@ -269,6 +289,7 @@
   max-width: 100%;
 }
 
+/* Pie de tabla */
 .table-footer {
   margin-top: 16px;
   font-size: 0.85rem;
@@ -280,15 +301,39 @@
 
 /* ANIMACIONES */
 @keyframes flipReveal {
-  0%   { transform: perspective(800px) rotateY(180deg); background-color: #333; opacity: 0; }
-  80%  { transform: perspective(800px) rotateY(36deg);  background-color: #333; opacity: 0; }
-  85%  { transform: perspective(800px) rotateY(27deg);  background-color: var(--final-bg, #333); opacity: 1; }
-  100% { transform: perspective(800px) rotateY(0deg);   background-color: var(--final-bg, #333); opacity: 1; }
+  0% {
+    transform: perspective(800px) rotateY(180deg);
+    background-color: #333;
+    opacity: 0;
+  }
+
+  80% {
+    transform: perspective(800px) rotateY(36deg);
+    background-color: #333;
+    opacity: 0;
+  }
+
+  85% {
+    transform: perspective(800px) rotateY(27deg);
+    background-color: var(--final-bg, #333);
+    opacity: 1;
+  }
+
+  100% {
+    transform: perspective(800px) rotateY(0deg);
+    background-color: var(--final-bg, #333);
+    opacity: 1;
+  }
 }
 
 @keyframes revealCharacter {
-  0%   { background-color: #333; }
-  100% { background-color: var(--character-final-bg, #333); }
+  0% {
+    background-color: #333;
+  }
+
+  100% {
+    background-color: var(--character-final-bg, #333);
+  }
 }
 
 /* CELEBRACIÓN */
@@ -317,10 +362,18 @@
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50%       { transform: scale(1.05); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
 }
 
+/* ALINEACIÓN IZQUIERDA PARA CELDAS DE LISTAS */
 .cell.left-align {
   justify-content: flex-start !important;
   padding-left: 16px;
@@ -345,7 +398,7 @@
   font-weight: bold;
 }
 
-/* TOAST */
+/* TOAST NOTIFICATIONS */
 .toast {
   position: fixed;
   bottom: 30px;
@@ -373,9 +426,17 @@
   line-height: 1;
 }
 
+/* Animación para que el toast aparezca desde abajo con un pequeño desplazamiento */
 @keyframes slideUp {
-  from { opacity: 0; transform: translate(-50%, 20px); }
-  to   { opacity: 1; transform: translate(-50%, 0); }
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }
 
 /* CONTADOR DE INTENTOS */
@@ -513,19 +574,21 @@
   color: #fff;
 }
 
+/* Normal activo: dorado relleno */
 .difficulty-btn.active {
   border-color: #e8b923;
   background: #e8b923;
   color: #1a1a1a;
 }
 
+/* Kiwami activo: rojo relleno*/
 .difficulty-btn.active[data-difficulty="kiwami"] {
   border-color: #c62828;
   background: #c62828;
   color: white;
 }
 
-/* BOTONES DE ACCIÓN */
+/* BOTONES DE ACCIÓN (Hint + Give up) */
 .action-bar {
   display: flex;
   gap: 12px;
@@ -534,6 +597,7 @@
   padding: 0.75rem 1rem 0;
 }
 
+/* BOTÓN PISTA */
 .hint-button {
   padding: 10px 22px;
   font-size: 0.95rem;
@@ -553,7 +617,7 @@
   transform: translateY(-1px);
 }
 
-/* PISTAS */
+/* ÁREA DE PISTAS */
 .hints-container {
   display: flex;
   flex-direction: column;
@@ -591,6 +655,7 @@
   margin: 0;
 }
 
+/* ÁREA DE PISTAS (entre barra y tabla) */
 .hints-area {
   display: flex;
   justify-content: center;
@@ -598,7 +663,7 @@
   width: 100%;
 }
 
-/* MODAL DE ESTADÍSTICAS */
+/* Modal de estadísticas */
 .header-actions {
   display: flex;
   justify-content: flex-end;
@@ -699,9 +764,14 @@
   transition: width 0.3s ease;
 }
 
-/* =============================================
-   RESPONSIVE — TABLETS (≤768px)
-   ============================================= */
+
+/* Evitar scroll horizontal en la página — solo la tabla puede scrollear */
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* RESPONSIVE — TABLETS (≤768px) */
 @media (max-width: 768px) {
   .title { font-size: 2.8rem; }
 
@@ -714,18 +784,11 @@
     right: 12px;
   }
 
-  .guess-input {
-    width: 240px;
-    font-size: 1rem;
-  }
+  .guess-input { width: 240px; font-size: 1rem; }
 
   .autocomplete-wrapper { max-width: 280px; }
 
-  .table {
-    min-width: 700px;
-    gap: 8px;
-    padding: 0.75rem;
-  }
+  .table { gap: 8px; padding: 0.75rem; }
 
   .header-row, .row { gap: 8px; }
 
@@ -743,34 +806,26 @@
   .character-name { font-size: 0.85rem; }
 }
 
-/* =============================================
-   RESPONSIVE — MÓVIL (≤600px)
-   La tabla pasa a layout de tarjetas apiladas
-   ============================================= */
-@media (max-width: 600px) {
+/* RESPONSIVE — MÓVIL (≤480px) */
+@media (max-width: 480px) {
   .title { font-size: 2.2rem; }
   .subtitle { font-size: 0.75rem; }
 
   .top-container { padding: 1rem 0.75rem 0.75rem; }
 
-  /* El contador de intentos pasa a inline dentro del hero, 
-     no absoluto, para no tapar el título */
   .attempts-counter {
-    position: static;
-    align-self: center;
-    font-size: 0.8rem;
-    padding: 5px 12px;
+    font-size: 0.78rem;
+    padding: 5px 10px;
+    top: 10px;
+    right: 10px;
   }
 
-  .guess-form { flex-direction: column; align-items: stretch; width: 100%; }
-  .guess-input { width: 100%; font-size: 1rem; }
-  .guess-button { width: 100%; }
+  .guess-form { flex-wrap: wrap; width: 100%; }
+  .guess-input { width: 100%; font-size: 0.95rem; }
 
   .autocomplete-wrapper { max-width: 100%; width: 100%; }
-  .autocomplete-box { top: auto; }
 
   .difficulty-selector { flex-wrap: wrap; justify-content: center; }
-  .difficulty-btn { padding: 8px 14px; font-size: 0.9rem; }
 
   .action-bar { flex-wrap: wrap; padding: 0.5rem 0.75rem 0; }
 
@@ -779,81 +834,34 @@
   .celebration h2 { font-size: 1.8rem; text-align: center; }
   .surrender-screen h2 { font-size: 1.5rem; text-align: center; }
 
-  /* La tabla deja de ser un grid horizontal y pasa a tarjetas */
-  .results { overflow-x: unset; }
+  /* La tabla mantiene un mínimo fijo y scrollea dentro de .results */
+  .results {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    /* Que el scroll se quede dentro, no se propague a la página */
+    overscroll-behavior-x: contain;
+  }
 
   .table {
-    min-width: unset;
-    width: 100%;
-    gap: 16px;
-    padding: 0.75rem;
+    min-width: 680px; /* mínimo para que las columnas no se aplasten */
+    gap: 6px;
+    padding: 0.5rem;
   }
 
-  /* Ocultar la fila de cabeceras: en móvil cada celda lleva su propia etiqueta */
-  .header-row { display: none; }
+  .header-row, .row { gap: 6px; }
 
-  /* Cada guess pasa a ser una tarjeta vertical */
-  .row {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    background: rgba(255, 255, 255, 0.04);
-    border-radius: 10px;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-  }
+  .header-cell { padding: 6px 4px; font-size: 0.7rem; }
 
-  /* La celda del personaje va arriba, en horizontal */
-  .character-cell-static {
-    flex-direction: row;
-    min-height: unset;
-    padding: 12px 16px;
-    gap: 12px;
-    border-radius: 0;
-    justify-content: flex-start;
-  }
+  .cell { padding: 6px 4px; min-height: 36px; }
+
+  .cell-text { font-size: 0.72rem; }
+
+  .character-cell-static { padding: 6px 4px; min-height: 70px; gap: 4px; }
 
   .character-image,
-  .character-image-placeholder { width: 44px; height: 44px; }
+  .character-image-placeholder { width: 40px; height: 40px; }
 
-  .character-name { font-size: 1rem; text-align: left; }
+  .character-name { font-size: 0.75rem; }
 
-  /* Cada celda de dato ocupa toda la fila con etiqueta a la izquierda y valor a la derecha */
-  .cell {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    min-height: unset;
-    padding: 10px 16px;
-    border-radius: 0;
-    opacity: 0;
-    text-align: right;
-    /* Separador entre celdas */
-    border-top: 1px solid rgba(0, 0, 0, 0.15);
-  }
-
-  /* Etiqueta de campo inyectada con data-label desde el CSS */
-  .cell::before {
-    content: attr(data-label);
-    font-size: 0.75rem;
-    font-weight: bold;
-    color: rgba(255, 255, 255, 0.6);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    flex-shrink: 0;
-    margin-right: 8px;
-    text-align: left;
-  }
-
-  .cell-text { font-size: 0.9rem; text-align: right; }
-
-  .cell.left-align {
-    align-items: flex-start;
-    padding: 10px 16px;
-  }
-
-  .cell.left-align .cell-text { text-align: right; }
-
-  .table-footer { font-size: 0.78rem; }
+  .table-footer { font-size: 0.75rem; }
 }
