@@ -207,13 +207,14 @@ function App() {
         return;
       }
 
-      // Si no se ha establecido el personaje objetivo, se establece con el que devuelve la API
-      if (!targetCharacter) {
+      // Usa el flag calculado por el servidor en lugar de comparar nombres en el cliente  
+      const isCorrect = data.correct;
+
+      // El objetivo solo llega cuando se acierta; se guarda entonces  
+      if (isCorrect && !targetCharacter) {
         setTargetCharacter(data.target);
       }
 
-      // Comprueba si el intento es correcto comparando el nombre del personaje con el objetivo y suma el intento
-      const isCorrect = data.character.name === data.target.name;
       const newAttempts = attempts + 1;
       const newGuesses = [...guesses, { name: data.character.name, character: data.character, comparison: data.result }];
       setGuesses(newGuesses);
@@ -223,7 +224,8 @@ function App() {
         attempts: newAttempts,
         gameWon: isCorrect,
         gameSurrendered: false,
-        targetCharacter: data.target,
+        // Solo se persiste el objetivo cuando se ha acertado (si no, es null)  
+        targetCharacter: isCorrect ? data.target : targetCharacter,
         usedHintFields,
         hints,
       });

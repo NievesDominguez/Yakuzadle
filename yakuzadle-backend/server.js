@@ -153,7 +153,7 @@ app.get("/guess", async (req, res) => {
   const userChar = getCharacter(name);
   if (!userChar) return res.status(404).json({ error: "Character not found" });
 
-  // Obtener el personaje objetivo, ya sea del día o especificado por nombre
+  // Obtener el personaje objetivo, ya sea del día o especificado por nombre  
   try {
     let targetChar;
     if (targetName) {
@@ -163,10 +163,14 @@ app.get("/guess", async (req, res) => {
       targetChar = await getDailyTarget(difficulty);
     }
     const result = compareCharacters(userChar, targetChar);
+    // La corrección se decide en el servidor, no en el cliente  
+    const correct = userChar.name === targetChar.name;
     res.json({
       character: { ...userChar, games: userChar.appears_in, gender: userChar.gender || "M" },
       result,
-      target: { name: targetChar.name, images: targetChar.images || [] },
+      correct,
+      // Solo se revela el objetivo (nombre e imágenes) cuando el intento es correcto  
+      target: correct ? { name: targetChar.name, images: targetChar.images || [] } : null,
     });
   } catch (error) {
     console.error("Error getting target:", error);
@@ -175,7 +179,7 @@ app.get("/guess", async (req, res) => {
 });
 
 
-// Endpoint para listar todos los personajes — usa caché en memoria, sin consultar Firestore  
+// Endpoint para listar todos los personajes, usa caché en memoria, sin consultar Firestore  
 app.get("/list", (req, res) => {
   const items = kiwamiCharacterNames.map(name => {
     const data = characterDataCache[name] || {};
