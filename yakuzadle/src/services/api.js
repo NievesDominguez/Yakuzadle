@@ -23,8 +23,12 @@ export async function getCharacterList() {
   return safeFetch(`${API_BASE}/list`);
 }
 
-export async function getDailyTarget(difficulty) {
-  return safeFetch(`${API_BASE}/daily-target?difficulty=${difficulty}`);
+export async function startGame(difficulty) {
+  return safeFetch(`${API_BASE}/start?difficulty=${difficulty}`);
+}
+
+export async function getDailyTarget(difficulty, token) {
+  return safeFetch(`${API_BASE}/daily-target?difficulty=${difficulty}&token=${encodeURIComponent(token)}`);
 }
 
 export async function getHint(difficulty, usedFields, targetName = null) {

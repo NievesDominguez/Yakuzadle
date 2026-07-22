@@ -13,6 +13,7 @@ import {
   getDailyTarget,
   getHint,
   setDebugTarget,
+  startGame,
   IMAGE_BASE_URL,
 } from "./services/api";
 
@@ -114,6 +115,7 @@ function App() {
   const [stats, setStats] = useState(() => loadStats("normal")); // Estadísticas del jugador para la dificultad actual  
   const [showStats, setShowStats] = useState(false); // Controla la visibilidad del modal de estadísticas  
   const [isLoading, setIsLoading] = useState(false); // Controla si la lista de personajes se está cargando
+  const [revealToken, setRevealToken] = useState(null); // Token para revelar el objetivo al rendirse
 
   // Carga inicial de la lista de personajes con caché de 24h  
   useEffect(() => {
@@ -137,6 +139,15 @@ function App() {
         .catch(() => showToastMessage("Error loading character list."));
     }
   }, []);
+
+
+  // Al iniciar/cambiar a una partida normal o kiwami, pide el token que autoriza revelar el objetivo al rendirse  
+  useEffect(() => {
+    if (difficulty === "infinite") return; // el modo infinito no usa /daily-target  
+    startGame(difficulty)
+      .then(({ token }) => setRevealToken(token))
+      .catch(() => showToastMessage("Could not initialize game."));
+  }, [difficulty]);
 
   // Función para mostrar mensajes de error o información al jugador
   const showToastMessage = (msg) => {
@@ -272,7 +283,7 @@ function App() {
     }
     // Solo aplica si no se ha establecido el personaje objetivo, para normal y kiwami
     try {
-      const data = await getDailyTarget(difficulty);
+       const data = await getDailyTarget(difficulty, revealToken);
       setTargetCharacter(data);
       const updated = updateStats(difficulty, false, attempts);
       setStats(updated);

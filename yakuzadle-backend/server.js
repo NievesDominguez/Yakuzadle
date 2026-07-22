@@ -7,6 +7,10 @@ const { db } = require("./firestore.js");
 const { compareCharacters } = require("./compare.js");
 const https = require("https");
 const app = express();
+const crypto = require("crypto");
+const REVEAL_SECRET = process.env.REVEAL_SECRET; // secreto de servidor
+
+
 
 // Configurar CORS para permitir solo los dominios de la app frontend, y solo métodos GET
 app.use(cors({
@@ -42,6 +46,19 @@ let dailyTargets = {
   kiwami: { date: null, character: null },
 };
 
+
+// Fecha del día en el mismo formato que usa getDailyTarget (UTC)  
+function todayStr() {
+  const d = new Date();
+  const utc = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  return utc.toISOString().split("T")[0];
+}
+
+function signReveal(dateStr, difficulty) {
+  return crypto.createHmac("sha256", REVEAL_SECRET)
+    .update(`${dateStr}:${difficulty}`)
+    .digest("hex");
+}
 
 // Algoritmo de selección diaria
 
@@ -197,15 +214,27 @@ app.get("/list", (req, res) => {
 
 
 // Devuelve el personaje objetivo del día  
-app.get("/daily-target", async (req, res) => {
+app.get("/daily-target", async (req, res) => {  
+  const difficulty = req.query.difficulty === "kiwami" ? "kiwami" : "normal";  
+  const expected = signReveal(todayStr(), difficulty);  
+  // Sin token válido no se revela el objetivo  
+  if (req.query.token !== expected) {  
+    return res.status(403).json({ error: "Forbidden" });  
+  }  
+  try {  
+    const target = await getDailyTarget(difficulty);  
+    res.json({ name: target.name, images: target.images || [] });  
+  } catch (error) {  
+    console.error("Error fetching daily target:", error);  
+    res.status(500).json({ error: "Could not fetch daily target" });  
+  }  
+});
+
+
+// Emite un token de partida sin revelar el personaje objetivo  
+app.get("/start", (req, res) => {
   const difficulty = req.query.difficulty === "kiwami" ? "kiwami" : "normal";
-  try {
-    const target = await getDailyTarget(difficulty);
-    res.json({ name: target.name, images: target.images || [] });
-  } catch (error) {
-    console.error("Error fetching daily target:", error);
-    res.status(500).json({ error: "Could not fetch daily target" });
-  }
+  res.json({ token: signReveal(todayStr(), difficulty) });
 });
 
 
