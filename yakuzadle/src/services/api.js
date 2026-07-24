@@ -34,3 +34,15 @@ export async function setDebugTarget(name, difficulty) {
   }
   return safeFetch(`http://localhost:3001/debug-set-target?name=${encodeURIComponent(name)}&difficulty=${difficulty}`);
 }
+
+// Obtiene un token firmado de partida (necesario para revelar el objetivo)
+export async function getStartToken(difficulty) {  
+  return safeFetch(`${API_BASE}/start?difficulty=${difficulty}`);  
+}  
+  
+// Revela el personaje objetivo del día (requiere el token emitido por /start)
+export async function getDailyTarget(difficulty, token) {  
+  return safeFetch(  
+    `${API_BASE}/daily-target?difficulty=${difficulty}&token=${encodeURIComponent(token)}`  
+  );  
+}
