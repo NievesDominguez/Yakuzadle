@@ -214,6 +214,16 @@ function App() {
     if (isLoading) return;
     setIsLoading(true);
     try {
+      // Llamada al backend: en modo infinito se pasa el objetivo aleatorio; si no, se usa el diario  
+      const data = await guessCharacter(
+        name,
+        difficulty === "infinite" ? "kiwami" : difficulty,
+        difficulty === "infinite" ? infiniteTarget : null
+      );
+
+      // La corrección la decide el servidor (campo `correct` de /guess)  
+      const isCorrect = data.correct;
+
       const newAttempts = attempts + 1;
       const newGuesses = [...guesses, { name: data.character.name, character: data.character, comparison: data.result }];
       setGuesses(newGuesses);
