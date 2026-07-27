@@ -479,42 +479,42 @@ function App() {
             Attempts: {attempts}/{MAX_ATTEMPTS}
           </div>
         )}
+      </div>
 
-        {attempts > 0 && !gameWon && (
-          <div className="action-bar">
-            <button className="hint-button" onClick={handleHint}>
-              💡 Hint
-            </button>
-          </div>
-        )}
-
-        {hints.length > 0 && (
-          <div className="hints-area">
-            <div className="hints-container">
-              {hints.map((h, i) => (
-                <div key={i} className="hint-item">
-                  <span className="hint-label">{h.field}:</span> {h.value}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="bottom-container">
-          {guesses.length > 0 && (
-            <main className="results">
-              <ResultTable guesses={guesses} target={targetCharacter} />
-            </main>
-          )}
+      {attempts > 0 && !gameWon && (
+        <div className="action-bar">
+          <button className="hint-button" onClick={handleHint}>
+            💡 Hint
+          </button>
         </div>
+      )}
 
-        {toast.show && (
-          <Toast
-            message={toast.message}
-            onClose={() => setToast({ show: false, message: "" })}
-          />
+      {hints.length > 0 && (
+        <div className="hints-area">
+          <div className="hints-container">
+            {hints.map((h, i) => (
+              <div key={i} className="hint-item">
+                <span className="hint-label">{h.field}:</span> {h.value}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="bottom-container">
+        {guesses.length > 0 && (
+          <main className="results">
+            <ResultTable guesses={guesses} target={targetCharacter} />
+          </main>
         )}
       </div>
+
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          onClose={() => setToast({ show: false, message: "" })}
+        />
+      )}
     </div>
   );
 }
