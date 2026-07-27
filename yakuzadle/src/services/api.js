@@ -5,10 +5,13 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api";
 export const IMAGE_BASE_URL = `${import.meta.env.VITE_API_BASE_URL || "/api"}/images/`;
 
 // Función auxiliar para hacer fetch
+// yakuzadle/src/services/api.js  
 async function safeFetch(url) {
   const res = await fetch(url);
   if (!res.ok) {
-    throw new Error(`Error del servidor: ${res.status} ${res.statusText}`);
+    const err = new Error(`Server error: ${res.status} ${res.statusText}`);
+    err.status = res.status;
+    throw err;
   }
   return res.json();
 }
@@ -36,13 +39,13 @@ export async function setDebugTarget(name, difficulty) {
 }
 
 // Obtiene un token firmado de partida (necesario para revelar el objetivo)
-export async function getStartToken(difficulty) {  
-  return safeFetch(`${API_BASE}/start?difficulty=${difficulty}`);  
-}  
-  
+export async function getStartToken(difficulty) {
+  return safeFetch(`${API_BASE}/start?difficulty=${difficulty}`);
+}
+
 // Revela el personaje objetivo del día (requiere el token emitido por /start)
-export async function getDailyTarget(difficulty, token) {  
-  return safeFetch(  
-    `${API_BASE}/daily-target?difficulty=${difficulty}&token=${encodeURIComponent(token)}`  
-  );  
+export async function getDailyTarget(difficulty, token) {
+  return safeFetch(
+    `${API_BASE}/daily-target?difficulty=${difficulty}&token=${encodeURIComponent(token)}`
+  );
 }

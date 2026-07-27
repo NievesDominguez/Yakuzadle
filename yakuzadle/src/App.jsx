@@ -265,7 +265,11 @@ function App() {
       }
     } catch (error) {
       console.error("Error submitting guess:", error);
-      showToastMessage("Network error. Please try again.");
+      if (error.status === 429) {
+        showToastMessage("Too many requests, please slow down.");
+      } else {
+        showToastMessage("Network error. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }

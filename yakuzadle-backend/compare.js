@@ -121,17 +121,16 @@ function compareCharacters(user, target) {
   // Normaliza un estilo de lucha: elimina paréntesis y trata "Unknown"
   const normalizeFightingStyle = (style) => {
     if (!style) return "";
-    // Primero, convertir "Unknown" en vacío
     const noUnknown = normalizeUnknown(style);
     if (noUnknown === null) return "";
-    // Luego eliminar paréntesis y su contenido
-    return noUnknown.replace(/\s*\([^)]*\)/g, "").trim();
+    // Forzar string por si viene un valor no textual  
+    return String(noUnknown).replace(/\s*\([^)]*\)/g, "").trim();
   };
 
   // Compara estilos de lucha
-  const compareFightingStyles = (userStyles, targetStyles) => {
-    const userList = userStyles || [];
-    const targetList = targetStyles || [];
+  const compareFightingStyles = (userStyles, targetStyles) => {  
+    const userList = toArray(userStyles);  
+    const targetList = toArray(targetStyles);
 
     // Normalizar y filtrar vacíos
     const userNorm = userList.map(normalizeFightingStyle).filter(s => s !== "");
@@ -153,7 +152,7 @@ function compareCharacters(user, target) {
     nationality: compareList(toArray(user.nationality), toArray(target.nationality)),
     games: compareGames(user.appears_in || [], target.appears_in || []),
     blood_type: compareValue(user.blood_type, target.blood_type),
-    fighting_style: compareFightingStyles(user.fighting_style || [], target.fighting_style || []),
+    fighting_style: compareFightingStyles(toArray(user.fighting_style), toArray(target.fighting_style)),
     height: compareHeight(user.height, target.height),
     date_of_birth: compareBirth(user.date_of_birth, target.date_of_birth),
   };
