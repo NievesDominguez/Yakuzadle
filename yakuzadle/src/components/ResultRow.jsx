@@ -120,7 +120,8 @@ function ResultRow({ guess, target }) {
   };
 
   const renderFightingStyles = () => {
-    const styles = guess.character?.fighting_style || [];
+    const raw = guess.character?.fighting_style;
+    const styles = Array.isArray(raw) ? raw : (raw ? [raw] : []);
     if (!styles.length) return null;
     return styles.map((style, idx) => {
       const normalized = normalizeFightingStyle(style);
