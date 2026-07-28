@@ -4,6 +4,7 @@ import ResultTable from "./components/ResultTable";
 import Celebration from "./components/Celebration";
 import Toast from "./components/Toast";
 import "./styles/main.css";
+import { buildShareText } from "./utils/shareResult";
 
 import StatsModal from "./components/StatsModal";
 import {
@@ -309,6 +310,17 @@ function App() {
     setHints([]);
   };
 
+  // Copia el resultado tipo Wordle al portapapeles  
+  const handleShare = async () => {
+    const text = buildShareText(guesses, difficulty, attempts, gameWon, MAX_ATTEMPTS);
+    try {
+      await navigator.clipboard.writeText(text);
+      showToastMessage("Result copied to clipboard!");
+    } catch {
+      showToastMessage("Could not copy result.");
+    }
+  };
+
   // Función para establecer un nuevo objetivo aleatorio en modo debug  
   const handleDebugNewTarget = async () => {
     if (characterNames.length === 0) {
@@ -449,29 +461,35 @@ function App() {
                 />
               )}
               <p className="surrender-character-name">{targetCharacter?.name}</p>
+              <button className="guess-button" onClick={handleShare}>
+                📋 Share result
+              </button>
               {difficulty === "infinite" && (
                 <button className="guess-button" onClick={handleChangeTarget}>
                   🔄 Change Target
                 </button>
               )}
             </div>
-          ) : showCelebration && difficulty !== "infinite" ? (
-            <Celebration onPlayAgain={handlePlayAgain} />
-          ) : gameWon && difficulty === "infinite" ? (
-            <div className="surrender-screen">
-              <h2>You got it!</h2>
-              <p>The character was:</p>
-              {targetCharacter?.images?.[0] && (
-                <img
-                  className="surrender-character-image"
-                  src={`${IMAGE_BASE_URL}${targetCharacter.images[0]}`}
-                  alt={targetCharacter.name}
-                />
-              )}
-              <p className="surrender-character-name">{targetCharacter?.name}</p>
-              <button className="guess-button" onClick={handleChangeTarget}>
-                🔄 Change Target
-              </button>
+          ) : showCelebration && difficulty !== "infinite" ? (  
+            <Celebration onPlayAgain={handlePlayAgain} onShare={handleShare} />
+          ) : gameWon && difficulty === "infinite" ? (  
+            <div className="surrender-screen">  
+              <h2>You got it!</h2>  
+              <p>The character was:</p>  
+              {targetCharacter?.images?.[0] && (  
+                <img  
+                  className="surrender-character-image"  
+                  src={`${IMAGE_BASE_URL}${targetCharacter.images[0]}`}  
+                  alt={targetCharacter.name}  
+                />  
+              )}  
+              <p className="surrender-character-name">{targetCharacter?.name}</p>  
+              <button className="guess-button" onClick={handleShare}>  
+                📋 Share result  
+              </button>  
+              <button className="guess-button" onClick={handleChangeTarget}>  
+                🔄 Change Target  
+              </button>  
             </div>
           ) : (
             <div className="waiting-message">🎉 You got it! 🎉</div>
