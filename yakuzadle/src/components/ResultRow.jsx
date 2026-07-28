@@ -39,12 +39,13 @@ function ResultRow({ guess, target }) {
     return "";
   };
 
-  const colorForBirth = (rawColor) => {
-    if (rawColor === "green") return "green";
-    if (rawColor.includes("older") || rawColor.includes("younger")) {
-      return rawColor.includes("red") ? "red" : "yellow";
-    }
-    return "red";
+  const colorForBirth = (rawColor) => {  
+    if (rawColor === "green") return "green";  
+    if (rawColor === "yellow") return "yellow";  
+    if (rawColor.includes("older") || rawColor.includes("younger")) {  
+      return rawColor.includes("red") ? "red" : "yellow";  
+    }  
+    return "red";  
   };
 
   const normalizeFightingStyle = (style) => {

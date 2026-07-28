@@ -66,13 +66,29 @@ function compareCharacters(user, target) {
     return match ? parseInt(match[0]) : null;
   };
 
-  // Compara fechas de nacimiento
+  // Compara fechas de nacimiento  
   const compareBirth = (a, b) => {
     const userNorm = normalizeUnknown(a);
     const targetNorm = normalizeUnknown(b);
 
     if (!userNorm && !targetNorm) return "green";
     if (!userNorm || !targetNorm) return "red";
+
+    // Detecta valores "solo año" (una cadena que es únicamente un año de 4 dígitos)  
+    const isYearOnly = (s) => /^\s*(1|2)\d{3}\s*$/.test(String(s));
+
+    // Si alguno de los dos es "solo año", comparar exclusivamente por año  
+    if (isYearOnly(userNorm) || isYearOnly(targetNorm)) {
+      const yearA = parseYear(userNorm);
+      const yearB = parseYear(targetNorm);
+      if (yearA && yearB) {
+        // Año coincide -> amarillo SIN flecha  
+        if (yearA === yearB) return "yellow";
+        // Año no coincide -> rojo con flecha de mayor/menor  
+        return yearA < yearB ? "red-older" : "red-younger";
+      }
+      return "red";
+    }
 
     const dateA = new Date(userNorm);
     const dateB = new Date(targetNorm);
@@ -84,22 +100,22 @@ function compareCharacters(user, target) {
       const sameMonth = dateA.getMonth() === dateB.getMonth();
       const sameYear = dateA.getFullYear() === dateB.getFullYear();
 
-      // Si coinciden en día, mes y año, sale verde
+      // Si coinciden en día, mes y año, sale verde  
       if (sameDay && sameMonth && sameYear) return "green";
 
-      // Si coinciden en día y mes pero no en año, o solo en año, sale amarillo
+      // Si coinciden en día y mes pero no en año, o solo en año, sale amarillo  
       if (sameYear || (sameDay && sameMonth && !sameYear)) {
         return dateA < dateB ? "older" : "younger";
       }
 
-      // Si no coinciden en nada, sale rojo con indicación de quién es mayor
+      // Si no coinciden en nada, sale rojo con indicación de quién es mayor  
       return dateA < dateB ? "red-older" : "red-younger";
     } else {
       const yearA = parseYear(userNorm);
       const yearB = parseYear(targetNorm);
-      // Si ambos tienen solo año, compara solo por año
+      // Si ambos tienen solo año, compara solo por año  
       if (yearA && yearB) {
-        if (yearA === yearB) return "green";
+        if (yearA === yearB) return "yellow";
         return yearA < yearB ? "red-older" : "red-younger";
       }
       return "red";
@@ -128,8 +144,8 @@ function compareCharacters(user, target) {
   };
 
   // Compara estilos de lucha
-  const compareFightingStyles = (userStyles, targetStyles) => {  
-    const userList = toArray(userStyles);  
+  const compareFightingStyles = (userStyles, targetStyles) => {
+    const userList = toArray(userStyles);
     const targetList = toArray(targetStyles);
 
     // Normalizar y filtrar vacíos
