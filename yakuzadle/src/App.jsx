@@ -22,6 +22,7 @@ const STATS_KEY = (difficulty) => `yakuzadle_stats_${difficulty}`;
 const MAX_ATTEMPTS = 15;
 // Intentos tras los que se gana una carga de pista
 const HINT_CHARGE_THRESHOLDS = [3, 7, 11];
+const MAX_HINTS = 3;
 
 const CACHE_KEY = `characterList_${import.meta.env.VITE_BUILD_HASH || "dev"}`;
 const CACHE_KEY_AT = `${CACHE_KEY}_cachedAt`;
