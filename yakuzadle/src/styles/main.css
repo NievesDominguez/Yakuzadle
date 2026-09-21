@@ -848,6 +848,7 @@ body {
     overflow-x: auto;  
     -webkit-overflow-scrolling: touch;  
     overscroll-behavior-x: contain;  
+    justify-content: flex-start; /* evita que el centrado corte el inicio de la tabla */  
   }  
   
   .table {  
@@ -924,9 +925,9 @@ body {
   .results {  
     overflow-x: auto;  
     -webkit-overflow-scrolling: touch;  
-    /* Que el scroll se quede dentro, no se propague a la página */  
     overscroll-behavior-x: contain;  
-  }  
+    justify-content: flex-start; /* evita que el centrado corte el inicio de la tabla */  
+  }
   
   .table {  
     min-width: 1000px; /* ajustar al ancho natural de la tabla en desktop */  
