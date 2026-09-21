@@ -30,10 +30,14 @@ function ResultTable({ guesses, target }) {
         <ResultRow key={g.name} guess={g} target={target} />
       ))}
 
-
-      <div className="table-footer">
-        * Ryu Ga Gotoku Online does not count for color comparison. If it matches, it appears in <strong>bold</strong>.
+      <div className="scroll-hint">  
+        Swipe horizontally to see all columns.  
       </div>
+
+      <div className="table-footer">  
+        * Ryu Ga Gotoku Online does not count for color comparison. If it matches, it appears in <strong>bold</strong>.  
+      </div>  
+
     </div>
   );
 }
