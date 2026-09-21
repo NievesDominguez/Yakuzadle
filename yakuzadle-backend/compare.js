@@ -17,15 +17,16 @@ function compareCharacters(user, target) {
     return [normalized];
   };
 
-  // Compara dos listas para determinar color: verde si coinciden, amarillo si hay intersección, rojo si no coinciden
-  const compareList = (a, b) => {
-    const listA = a || [];
-    const listB = b || [];
-    if (listA.length === 0 && listB.length === 0) return "green";
-    if (JSON.stringify([...listA].sort()) === JSON.stringify([...listB].sort())) return "green";
-    if (listA.some(x => listB.includes(x))) return "yellow";
+  // Compara dos listas
+  const compareList = (a, b) => {  
+    const listA = (a || []).map((x) => String(x).toLowerCase());  
+    const listB = (b || []).map((x) => String(x).toLowerCase());  
+    if (listA.length === 0 && listB.length === 0) return "green";  
+    if (JSON.stringify([...listA].sort()) === JSON.stringify([...listB].sort())) return "green";  
+    if (listA.some((x) => listB.includes(x))) return "yellow";  
     return "red";
   };
+
 
   // Compara dos valores simples (con normalización de "Unknown")
   const compareValue = (a, b) => {
@@ -123,15 +124,19 @@ function compareCharacters(user, target) {
   };
 
   // Compara listas de juegos, excluyendo "Ryu Ga Gotoku Online" para el color
-  const compareGames = (userGames, targetGames) => {
-    const EXCLUDED = "Ryu Ga Gotoku Online";
-    const userFiltered = (userGames || []).filter(g => g !== EXCLUDED);
-    const targetFiltered = (targetGames || []).filter(g => g !== EXCLUDED);
-
-    if (!userFiltered.length && !targetFiltered.length) return "red";
-    if (JSON.stringify([...userFiltered].sort()) === JSON.stringify([...targetFiltered].sort())) return "green";
-    if (userFiltered.some(x => targetFiltered.includes(x))) return "yellow";
-    return "red";
+  const compareGames = (userGames, targetGames) => {  
+    const EXCLUDED = "Ryu Ga Gotoku Online";  
+    const userFiltered = (userGames || [])  
+      .filter((g) => g !== EXCLUDED)  
+      .map((g) => String(g).toLowerCase());  
+    const targetFiltered = (targetGames || [])  
+      .filter((g) => g !== EXCLUDED)  
+      .map((g) => String(g).toLowerCase());  
+    
+    if (!userFiltered.length && !targetFiltered.length) return "red";  
+    if (JSON.stringify([...userFiltered].sort()) === JSON.stringify([...targetFiltered].sort())) return "green";  
+    if (userFiltered.some((x) => targetFiltered.includes(x))) return "yellow";  
+    return "red";  
   };
 
   // Normaliza un estilo de lucha: elimina paréntesis y trata "Unknown"
