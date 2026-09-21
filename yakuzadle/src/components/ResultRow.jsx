@@ -13,6 +13,9 @@ function ResultRow({ guess, target }) {
     ["date_of_birth", "Birthdate"],
   ];
 
+  // Palabras que se dejan en minúscula dentro del Title Case  
+  const LOWERCASE_WORDS = new Set(["of", "the", "a", "and", "with", "at"]);  
+
   // Flechas para indicar si la altura y edad es mayor/menor
   const arrowFor = (key, color) => {
     if (key === "height") {
@@ -48,9 +51,20 @@ function ResultRow({ guess, target }) {
     return "red";  
   };
 
-  const normalizeFightingStyle = (style) => {
-    if (!style) return "";
-    return style.replace(/\s*\([^)]*\)/g, "").trim();
+  const toTitleCase = (str) =>  
+    str  
+      .split(/\s+/)  
+      .map((word) => {  
+        const lower = word.toLowerCase();  
+        if (LOWERCASE_WORDS.has(lower)) return lower;  
+        return lower.charAt(0).toUpperCase() + lower.slice(1);  
+      })  
+      .join(" ");  
+
+  const normalizeFightingStyle = (style) => {  
+    if (!style) return "";  
+    const cleaned = style.replace(/\s*\([^)]*\)/g, "").trim();  
+    return toTitleCase(cleaned);  
   };
 
   const imageUrl = guess.character?.images?.[0]

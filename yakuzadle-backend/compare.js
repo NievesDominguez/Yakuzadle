@@ -145,7 +145,7 @@ function compareCharacters(user, target) {
     const noUnknown = normalizeUnknown(style);
     if (noUnknown === null) return "";
     // Forzar string por si viene un valor no textual  
-    return String(noUnknown).replace(/\s*\([^)]*\)/g, "").trim();
+    return String(noUnknown).replace(/\s*\([^)]*\)/g, "").trim().toLowerCase();
   };
 
   // Compara estilos de lucha
