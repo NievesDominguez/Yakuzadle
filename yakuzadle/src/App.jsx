@@ -5,6 +5,7 @@ import Celebration from "./components/Celebration";
 import Toast from "./components/Toast";
 import "./styles/main.css";
 import { buildShareText } from "./utils/shareResult";
+import Countdown from "./components/Countdown";
 
 import StatsModal from "./components/StatsModal";
 import {
@@ -351,7 +352,7 @@ function App() {
   const handleHint = async () => {  
     // Solo se puede pedir pista si hay una carga disponible  
     if (hints.length >= MAX_HINTS) {  
-      showToastMessage("Has alcanzado el máximo de 3 pistas");  
+      showToastMessage("You reached the maximum number of hints for this game.");  
       return;  
     }  
     if (availableCharges <= 0) {  
@@ -470,30 +471,34 @@ function App() {
               guessedNames={guesses.map(g => g.name)}
               isLoading={isLoading}
             />
-          ) : gameLost ? (
-            <div className="surrender-screen">
-              <h2>You lost!</h2>
-              <p>The character was:</p>
-              {targetCharacter?.images?.[0] && (
-                <img
-                  className="surrender-character-image"
-                  src={`${IMAGE_BASE_URL}${targetCharacter.images[0]}`}
-                  alt={targetCharacter.name}
-                />
-              )}
-              <p className="surrender-character-name">{targetCharacter?.name}</p>
-              <button className="guess-button" onClick={handleShare}>
-                📋 Share result
-              </button>
-              {difficulty === "infinite" && (
-                <button className="guess-button" onClick={handleChangeTarget}>
-                  🔄 Change Target
-                </button>
-              )}
-            </div>
+          ) : gameLost ? (  
+            <div className="surrender-screen">  
+              <h2>You lost!</h2>  
+              <p>The character was:</p>  
+              {targetCharacter?.images?.[0] && (  
+                <img  
+                  className="surrender-character-image"  
+                  src={`${IMAGE_BASE_URL}${targetCharacter.images[0]}`}  
+                  alt={targetCharacter.name}  
+                />  
+              )}  
+              <p className="surrender-character-name">{targetCharacter?.name}</p>  
+              <button className="guess-button" onClick={handleShare}>  
+                📋 Share result  
+              </button>  
+              {difficulty === "infinite" && (  
+                <button className="guess-button" onClick={handleChangeTarget}>  
+                  🔄 Change Target  
+                </button>  
+              )}  
+              {difficulty !== "infinite" && <Countdown />}  
+            </div>  
           ) : showCelebration && difficulty !== "infinite" ? (  
-            <Celebration onPlayAgain={handlePlayAgain} onShare={handleShare} />
-          ) : gameWon && difficulty === "infinite" ? (  
+            <>  
+              <Celebration onPlayAgain={handlePlayAgain} onShare={handleShare} />  
+              <Countdown />  
+            </>  
+          ) : gameWon && difficulty === "infinite" ? ( 
             <div className="surrender-screen">  
               <h2>You got it!</h2>  
               <p>The character was:</p>  
@@ -512,8 +517,11 @@ function App() {
                 🔄 Change Target  
               </button>  
             </div>
-          ) : (
-            <div className="waiting-message">🎉 You got it! 🎉</div>
+          ) : (  
+            <div className="waiting-message">  
+              🎉 You got it! 🎉  
+              <Countdown />  
+            </div>  
           )}
         </header>
 

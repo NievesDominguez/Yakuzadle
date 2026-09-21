@@ -296,7 +296,28 @@
   text-align: center;  
   word-break: break-word;  
   max-width: 100%;  
+}
+
+.countdown {  
+  margin-top: 16px;  
+  text-align: center;  
+  display: flex;  
+  flex-direction: column;  
+  align-items: center;  
+  gap: 4px;  
 }  
+  
+.countdown-label {  
+  font-size: 0.9rem;  
+  opacity: 0.8;  
+}  
+  
+.countdown-time {  
+  font-size: 1.6rem;  
+  font-weight: bold;  
+  font-variant-numeric: tabular-nums;  
+  letter-spacing: 2px;  
+}
   
 /* Pie de tabla */  
 .table-footer {  
