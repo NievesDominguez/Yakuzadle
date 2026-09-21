@@ -620,6 +620,11 @@
   transition: background 0.2s, color 0.2s, transform 0.1s;
 }
 
+.hint-button:disabled {  
+  opacity: 0.5;  
+  cursor: not-allowed;  
+}
+
 .hint-button:hover {
   background: #e8b923;
   color: #111;

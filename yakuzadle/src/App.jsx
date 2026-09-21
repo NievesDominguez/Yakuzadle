@@ -20,6 +20,8 @@ import {
 // Utilidades de estadísticas  
 const STATS_KEY = (difficulty) => `yakuzadle_stats_${difficulty}`;
 const MAX_ATTEMPTS = 15;
+// Intentos tras los que se gana una carga de pista
+const HINT_CHARGE_THRESHOLDS = [3, 7, 11];
 
 const CACHE_KEY = `characterList_${import.meta.env.VITE_BUILD_HASH || "dev"}`;
 const CACHE_KEY_AT = `${CACHE_KEY}_cachedAt`;
@@ -105,7 +107,9 @@ function App() {
   const [showCelebration, setShowCelebration] = useState(false); // Controla la animación de celebración al ganar  
   const [attempts, setAttempts] = useState(initialSession?.attempts ?? 0); // Número de intentos realizados  
   const [usedHintFields, setUsedHintFields] = useState(initialSession?.usedHintFields ?? []); // Campos de pistas ya utilizados  
-  const [hints, setHints] = useState(initialSession?.hints ?? []); // Lista de pistas obtenidas  
+  const [hints, setHints] = useState(initialSession?.hints ?? []); // Lista de pistas obtenidas
+  const earnedCharges = HINT_CHARGE_THRESHOLDS.filter((t) => attempts >= t).length; // Cargas de pistas ganadas según los intentos realizados
+  const availableCharges = Math.min(MAX_HINTS, earnedCharges) - hints.length; // Cargas de pistas disponibles = ganadas menos las pistas ya consumidas
   const [toast, setToast] = useState({ message: "", show: false }); // Estado para mostrar mensajes de error o información al jugador  
   const [characterNames, setCharacterNames] = useState([]); // Lista de nombres de personajes cargada desde la API  
   const [difficulty, setDifficulty] = useState("normal"); // Dificultad actual del juego (normal o kiwami)  
@@ -343,7 +347,23 @@ function App() {
   };
 
   // Maneja la solicitud de una pista  
-  const handleHint = async () => {
+  const handleHint = async () => {  
+    // Solo se puede pedir pista si hay una carga disponible  
+    if (hints.length >= MAX_HINTS) {  
+      showToastMessage("Has alcanzado el máximo de 3 pistas");  
+      return;  
+    }  
+    if (availableCharges <= 0) {  
+      // Próximo intento que otorga una carga
+      const next = HINT_CHARGE_THRESHOLDS[hints.length];  
+      showToastMessage(  
+        next  
+          ? `You can get a new hint after attempt number ${next}`  
+          : "There are no more hints available for this game"  
+      );  
+      return;  
+    }
+
     // Campos de pistas posibles  
     const HINT_FIELDS = ["affiliation", "nationality", "games", "fighting_style", "height", "date_of_birth"];
     // Filtra los campos de pistas que ya han sido utilizados o que ya se han adivinado correctamente  
@@ -503,13 +523,17 @@ function App() {
         )}
       </div>
 
-      {attempts > 0 && !gameWon && (
-        <div className="action-bar">
-          <button className="hint-button" onClick={handleHint}>
-            💡 Hint
-          </button>
-        </div>
-      )}
+      {attempts > 0 && !gameWon && (  
+        <div className="action-bar">  
+          <button  
+            className="hint-button"  
+            onClick={handleHint}  
+            disabled={availableCharges <= 0 || hints.length >= MAX_HINTS}  
+          >  
+            💡 Hint ({availableCharges} · {hints.length}/{MAX_HINTS})  
+          </button>  
+        </div>  
+    )}
 
       {hints.length > 0 && (
         <div className="hints-area">
