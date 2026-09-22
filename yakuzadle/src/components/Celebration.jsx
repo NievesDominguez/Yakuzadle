@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-import confetti from 'canvas-confetti';
-
-function Celebration({ onPlayAgain, onShare }) {  
+import { useEffect } from 'react';  
+import confetti from 'canvas-confetti';  
+  
+function Celebration({ onShare }) {  
   useEffect(() => {  
     confetti({  
       particleCount: 100,  
@@ -31,11 +31,8 @@ function Celebration({ onPlayAgain, onShare }) {
           📋 Share result  
         </button>  
       )}  
-      <button onClick={onPlayAgain} className="guess-button">  
-        Play again  
-      </button>  
     </div>  
   );  
-}
-
+}  
+  
 export default Celebration;

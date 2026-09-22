@@ -518,11 +518,14 @@ function App() {
                 🔄 Change Target  
               </button>  
             </div>
-          ) : (  
-            <div className="waiting-message">  
-              🎉 You got it! 🎉  
-              <Countdown />  
-            </div>  
+          ) : (    
+            <div className="waiting-message">    
+              🎉 You got it! 🎉    
+              <button className="guess-button" onClick={handleShare}>    
+                📋 Share result    
+              </button>    
+              <Countdown />    
+            </div>    
           )}
         </header>
 
