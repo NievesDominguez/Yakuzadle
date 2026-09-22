@@ -377,7 +377,8 @@
 }  
   
 /* CELEBRACIÓN */  
-.celebration {  
+.celebration,
+.waiting-message {
   display: flex;  
   flex-direction: column;  
   align-items: center;  

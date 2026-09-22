@@ -520,7 +520,7 @@ function App() {
             </div>
           ) : (    
             <div className="waiting-message">    
-              <p>🎉 You got it! 🎉</p>
+              🎉 You got it! 🎉    
               <button className="guess-button" onClick={handleShare}>    
                 📋 Share result    
               </button>    
