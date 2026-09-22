@@ -1,4 +1,4 @@
-// Orden de columnas (igual que `fields` en ResultRow.jsx)  
+// Orden de columnas
 const FIELDS = [  
   "gender",  
   "affiliation",  
@@ -10,12 +10,15 @@ const FIELDS = [
   "date_of_birth",  
 ];  
   
-// Normaliza cualquier valor de comparación a color base: green / yellow / red  
+// Emojis de cabecera
+const HEADER_EMOJIS = ["👤", "⚧", "👥", "🇺🇳", "🎮", "🩸", "👊", "📏", "🎂"];  
+  
+// Normaliza cualquier valor de comparación a color base: green / yellow / red
 function colorToBase(rawColor) {  
   if (!rawColor) return "red";  
   if (rawColor === "green") return "green";  
   if (rawColor === "yellow") return "yellow";  
-  // Casos direccionales de height (higher/lower) y date_of_birth (older/younger)  
+  // Casos direccionales de height (higher/lower) y date_of_birth (older/younger)
   if (  
     rawColor.includes("higher") ||  
     rawColor.includes("lower") ||  
@@ -41,18 +44,26 @@ const DIFFICULTY_LABEL = {
  * @param {string} difficulty - "normal" | "kiwami" | "infinite"  
  * @param {number} attempts - Número de intentos realizados  
  * @param {boolean} gameWon - Si la partida se ganó  
- * @param {number} maxAttempts - Límite de intentos  
+ * @param {number} maxAttempts - Límite de intentos
  * @returns {string}  
  */  
 export function buildShareText(guesses, difficulty, attempts, gameWon, maxAttempts) {  
   const label = DIFFICULTY_LABEL[difficulty] || "Normal";  
   const score = gameWon ? `${attempts}/${maxAttempts}` : `X/${maxAttempts}`;  
   
+  // Fila de cabecera con un emoji por columna, separados por espacio  
+  const header = HEADER_EMOJIS.join(" ");  
+  
   const grid = guesses  
-    .map((g) =>  
-      FIELDS.map((key) => EMOJI[colorToBase(g.comparison?.[key])]).join("")  
-    )  
+    .map((g, idx) => {  
+      // La columna del personaje: verde solo en la fila ganadora (la última si se ganó)  
+      const isCorrectGuess = gameWon && idx === guesses.length - 1;  
+      const charCell = isCorrectGuess ? EMOJI.green : EMOJI.red;  
+      const fieldCells = FIELDS.map((key) => EMOJI[colorToBase(g.comparison?.[key])]);  
+      // Todas las celdas de la fila separadas por espacio  
+      return [charCell, ...fieldCells].join(" ");  
+    })  
     .join("\n");  
   
-  return `Yakuzadle (${label}) ${score}\n\n${grid}\n\nhttps://laddle.web.app/`;  
+  return `LADdle (${label}) ${score}\n\n${header}\n${grid}\n\nhttps://laddle.web.app/`;  
 }
