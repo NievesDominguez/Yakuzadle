@@ -112,8 +112,8 @@ function ResultRow({ guess, target }) {
   const renderGames = () => {
     if (!groupedGames.length) return null;
     return groupedGames.map((game, idx) => {
-      const isExcluded = game.includes(EXCLUDED_GAME);
-      const isBold = isExcluded && targetGames.includes(EXCLUDED_GAME);
+      const isExcluded = game.includes(EXCLUDED_GAME);  
+      const isBold = isExcluded && guess.comparison?.rggo_match;
       return (
         <div key={idx} className="list-item">
           <span className="bullet">•</span>

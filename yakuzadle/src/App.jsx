@@ -255,15 +255,16 @@ function App() {
         hints,
       });
 
-      if (isCorrect && !gameWon) {
-        setGameWon(true);
-        const updated = updateStats(difficulty, true, newAttempts);
-        setStats(updated);
-        const totalAnimationTime = 4000;
-        setTimeout(() => {
-          setShowCelebration(true);
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }, totalAnimationTime);
+      if (isCorrect && !gameWon) {  
+        setGameWon(true);  
+        setTargetCharacter(data.target); // <-- AÑADIR: guarda el objetivo revelado para que la tarjeta salga verde  
+        const updated = updateStats(difficulty, true, newAttempts);  
+        setStats(updated);  
+        const totalAnimationTime = 4000;  
+        setTimeout(() => {  
+          setShowCelebration(true);  
+          window.scrollTo({ top: 0, behavior: "smooth" });  
+        }, totalAnimationTime);  
       } else if (isLoss && !gameLost) {
         setGameLost(true);
         const updated = updateStats(difficulty, false, newAttempts);

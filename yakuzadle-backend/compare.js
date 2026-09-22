@@ -167,15 +167,19 @@ function compareCharacters(user, target) {
   };
 
   // Resultado final para cada campo
-  return {
-    gender: compareValue(user.gender || "M", target.gender || "M"),
-    affiliation: compareList(user.affiliation || [], target.affiliation || []),
-    nationality: compareList(toArray(user.nationality), toArray(target.nationality)),
-    games: compareGames(user.appears_in || [], target.appears_in || []),
-    blood_type: compareValue(user.blood_type, target.blood_type),
-    fighting_style: compareFightingStyles(toArray(user.fighting_style), toArray(target.fighting_style)),
-    height: compareHeight(user.height, target.height),
-    date_of_birth: compareBirth(user.date_of_birth, target.date_of_birth),
+  return {  
+    gender: compareValue(user.gender || "M", target.gender || "M"),  
+    affiliation: compareList(user.affiliation || [], target.affiliation || []),  
+    nationality: compareList(toArray(user.nationality), toArray(target.nationality)),  
+    games: compareGames(user.appears_in || [], target.appears_in || []),  
+    blood_type: compareValue(user.blood_type, target.blood_type),  
+    fighting_style: compareFightingStyles(toArray(user.fighting_style), toArray(target.fighting_style)),  
+    height: compareHeight(user.height, target.height),  
+    date_of_birth: compareBirth(user.date_of_birth, target.date_of_birth),  
+    // Negrita de RGGO: true solo si ambos personajes lo incluyen  
+    rggo_match:  
+      (user.appears_in || []).includes("Ryu Ga Gotoku Online") &&  
+      (target.appears_in || []).includes("Ryu Ga Gotoku Online"),  
   };
 }
 module.exports = { compareCharacters };
