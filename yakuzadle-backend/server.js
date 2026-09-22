@@ -26,14 +26,16 @@ app.use(helmet({
 
 app.use(compression()); // Comprimir respuestas para mejorar rendimiento
 
-// Limitar a 60 peticiones por IP por minuto para prevenir abuso
-app.use(rateLimit({
-  windowMs: 60 * 1000, // 1 minuto  
-  max: 60,             // Máximo 60 peticiones por IP por minuto  
-  message: { error: "Too many requests, please slow down." },
-  standardHeaders: true,
-  legacyHeaders: false,
+// Limitar peticiones por IP por minuto para prevenir abuso
+app.use(rateLimit({  
+  windowMs: 60 * 1000,  
+  max: 60,
+  message: { error: "Too many requests, please slow down." },  
+  standardHeaders: true,  
+  legacyHeaders: false,  
+  skip: (req) => req.path.startsWith("/images"),  
 }));
+
 app.use(express.json());
 
 let normalCharacterNames = []; // Personajes sin campo difficulty  
