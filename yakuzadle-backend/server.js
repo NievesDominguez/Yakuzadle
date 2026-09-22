@@ -14,7 +14,7 @@ const REVEAL_SECRET = process.env.REVEAL_SECRET; // secreto de servidor
 
 // Configurar CORS para permitir solo los dominios de la app frontend, y solo métodos GET
 app.use(cors({
-  origin: ["https://yamaibot.web.app", "https://yamaibot.firebaseapp.com"],
+  origin: ["https://yamaibot.web.app", "https://yamaibot.firebaseapp.com", "https://laddle.web.app", "https://laddle.firebaseapp.com"],
   methods: ["GET"],
 }));
 

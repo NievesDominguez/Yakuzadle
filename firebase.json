@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "yakuzadle/dist",
+    "public": "laddle/dist",
     "ignore": [
       "firebase.json",
       "**/.*",

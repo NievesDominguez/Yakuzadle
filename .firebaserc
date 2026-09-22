@@ -1,5 +1,12 @@
-{
-  "projects": {
-    "default": "yamaibot"
-  }
+{  
+  "projects": {  
+    "default": "yamaibot"  
+  },  
+  "targets": {  
+    "yamaibot": {  
+      "hosting": {  
+        "laddle": ["laddle"]  
+      }  
+    }  
+  }  
 }

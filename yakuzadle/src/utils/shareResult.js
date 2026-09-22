@@ -54,5 +54,5 @@ export function buildShareText(guesses, difficulty, attempts, gameWon, maxAttemp
     )  
     .join("\n");  
   
-  return `Yakuzadle (${label}) ${score}\n\n${grid}\n\nhttps://yamaibot.web.app/`;  
+  return `Yakuzadle (${label}) ${score}\n\n${grid}\n\nhttps://laddle.web.app/`;  
 }

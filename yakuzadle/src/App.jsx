@@ -437,7 +437,7 @@ function App() {
               📊
             </button>
           </div>
-          <h1 className="title">Yakuzadle</h1>
+          <h1 className="title">LADdle</h1>
           <p className="subtitle">Guess the daily Like a Dragon character</p>
 
           <p className="difficulty-label">Difficulty:</p>
