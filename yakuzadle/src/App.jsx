@@ -495,10 +495,10 @@ function App() {
               {difficulty !== "infinite" && <Countdown />}  
             </div>  
           ) : showCelebration && difficulty !== "infinite" ? (  
-            <>  
-              <Celebration onPlayAgain={handlePlayAgain} onShare={handleShare} />  
-              <Countdown />  
-            </>  
+           <>  
+             <Celebration onShare={handleShare} target={targetCharacter} />  
+             <Countdown />  
+           </> 
           ) : gameWon && difficulty === "infinite" ? ( 
             <div className="surrender-screen">  
               <h2>You got it!</h2>  
@@ -518,14 +518,22 @@ function App() {
                 🔄 Change Target  
               </button>  
             </div>
-          ) : (    
-            <div className="waiting-message">    
-              🎉 You got it! 🎉    
-              <button className="guess-button" onClick={handleShare}>    
-                📋 Share result    
-              </button>    
-              <Countdown />    
-            </div>    
+          ) : (  
+            <div className="waiting-message">  
+              🎉 You got it! 🎉  
+              {targetCharacter?.images?.[0] && (  
+                <img  
+                  className="surrender-character-image"  
+                  src={`${IMAGE_BASE_URL}${targetCharacter.images[0]}`}  
+                  alt={targetCharacter.name}  
+                />  
+              )}  
+              <p className="surrender-character-name">{targetCharacter?.name}</p>  
+              <button className="guess-button" onClick={handleShare}>  
+                📋 Share result  
+              </button>  
+              <Countdown />  
+            </div>  
           )}
         </header>
 
