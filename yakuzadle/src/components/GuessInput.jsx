@@ -1,79 +1,57 @@
-import { useState, useEffect, useRef } from "react";
-import { getCharacterList } from "../services/api";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { IMAGE_BASE_URL } from "../services/api";
+import { searchCharacters, resolveGuess } from "../utils/search";
 
-function GuessInput({ onGuess, onError, difficulty, guessedNames, isLoading }) {
+// La lista la carga App una sola vez y llega por props, así que no hay efecto que dependa de onError y no puede haber bucle de peticiones
+function GuessInput({ characters, onGuess, onError, difficulty, guessedNames, isLoading }) {
   const [value, setValue] = useState("");
-  const [allItems, setAllItems] = useState([]);
-  const [filtered, setFiltered] = useState([]);
   const inputRef = useRef(null);
-  // Clave de caché basada en el hash de compilación para invalidar la caché en nuevas versiones
-  const CACHE_KEY = `characterList_${import.meta.env.VITE_BUILD_HASH || "dev"}`;
 
+  // Sugerencias derivadas del texto (sin estado ni efectos extra)
+  const suggestions = useMemo(
+    () => searchCharacters(characters, value, { difficulty, guessedNames }),
+    [characters, value, difficulty, guessedNames]
+  );
+
+  // Al terminar una petición el input se vuelve a habilitar: recuperar el foco
   useEffect(() => {
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (cached) {
-      setAllItems(JSON.parse(cached));  // Guardar items completos, no solo nombres  
-    } else {
-      getCharacterList()
-        .then(data => {
-          setAllItems(data);
-          localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-        })
-        .catch(() => onError("Failed to load character list"));
-    }
-  }, [onError]);
+    if (!isLoading) inputRef.current?.focus();
+  }, [isLoading]);
 
-  const handleChange = (e) => {
-    const v = e.target.value;
-    setValue(v);
-    if (!v.length) {
-      setFiltered([]);
-      return;
-    }
-    const lower = v.toLowerCase();
+  const handleChange = (e) => setValue(e.target.value);
 
-    const f = allItems
-      .map((item) => {
-        // Filtrar por nombre, aliases y apodos, ignorando los ya adivinados y los personajes exclusivos según la dificultad
-        if (guessedNames && guessedNames.includes(item.name)) return null;
-        if (difficulty === "normal" && item.kiwamiOnly) return null;
-        // Comprobar si el nombre principal coincide  
-        if (item.name.toLowerCase().includes(lower)) {
-          return { ...item, matchedAlias: null };
-        }
-        // Comprobar aliases  
-        const matchedAlias = [...(item.aliases || []), ...(item.nicknames || [])].find(
-          (a) => a.toLowerCase().includes(lower)
-        );
-        if (matchedAlias) {
-          return { ...item, matchedAlias };
-        }
-        return null;
-      })
-      .filter(Boolean);
-
-    setFiltered(f.slice(0, 8));
-  };
-
-  // Al seleccionar un personaje de las sugerencias, hacer el guess y limpiar el input
+  // Al seleccionar una sugerencia se usa su nombre exacto
   const selectItem = (item) => {
-    setFiltered([]);
-    onGuess(item.name);
     setValue("");
-    inputRef.current?.focus();
+    onGuess(item.name);
   };
 
-  // Al hacer submit, usar el valor del input para hacer el guess
+  // El texto libre se resuelve contra la lista antes de enviarlo
   const submit = (e) => {
     e.preventDefault();
     if (!value.trim()) return;
-    onGuess(value.trim());
-    setValue("");
-    setFiltered([]);
-    inputRef.current?.focus();
-  };
 
+    if (characters.length === 0) {
+      onError("Character list not loaded yet. Try again in a moment.");
+      return;
+    }
+
+    const result = resolveGuess(characters, value, { difficulty, guessedNames });
+    switch (result.status) {
+      case "ok":
+        setValue("");
+        onGuess(result.name);
+        break;
+      case "duplicate":
+        onError(`You already guessed ${result.name}.`);
+        break;
+      case "kiwami-only":
+        onError(`${result.name} is only available in Kiwami mode.`);
+        break;
+      default:
+        onError("Character not found. Pick one from the suggestions.");
+    }
+  };
 
   return (
     <div className="autocomplete-wrapper">
@@ -91,11 +69,11 @@ function GuessInput({ onGuess, onError, difficulty, guessedNames, isLoading }) {
         <button className="guess-button" disabled={isLoading}>Guess</button>
       </form>
       {/* Sugerencias de personajes que coinciden con el input, mostrando imagen, nombre y alias coincidente */}
-      {filtered.length > 0 && (
+      {suggestions.length > 0 && (
         <div className="autocomplete-box">
-          {filtered.map((item, i) => (
+          {suggestions.map((item) => (
             <div
-              key={i}
+              key={item.name}
               className="autocomplete-item"
               onClick={() => selectItem(item)}
             >

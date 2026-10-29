@@ -811,7 +811,7 @@
 }  
   
   
-/* Evitar scroll horizontal en la página — solo la tabla puede scrollear */  
+/* Evitar scroll horizontal en la página, solo la tabla puede scrollear */  
 html,  
 body {  
   overflow-x: hidden;  

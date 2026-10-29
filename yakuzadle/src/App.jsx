@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import GuessInput from "./components/GuessInput";
 import ResultTable from "./components/ResultTable";
 import Celebration from "./components/Celebration";
 import Toast from "./components/Toast";
 import "./styles/main.css";
 import { buildShareText } from "./utils/shareResult";
+import { loadStats, updateStats } from "./utils/stats";
 import Countdown from "./components/Countdown";
 
 import StatsModal from "./components/StatsModal";
@@ -18,62 +19,40 @@ import {
   IMAGE_BASE_URL,
 } from "./services/api";
 
-// Utilidades de estadísticas  
-const STATS_KEY = (difficulty) => `yakuzadle_stats_${difficulty}`;
 const MAX_ATTEMPTS = 15;
 // Intentos tras los que se gana una carga de pista
 const HINT_CHARGE_THRESHOLDS = [3, 6, 9, 12];
 const MAX_HINTS = 4;
 
-const CACHE_KEY = `characterList_${import.meta.env.VITE_BUILD_HASH || "dev"}`;
+const CACHE_PREFIX = "characterList_";
+const CACHE_KEY = `${CACHE_PREFIX}${import.meta.env.VITE_BUILD_HASH || "dev"}`;
 const CACHE_KEY_AT = `${CACHE_KEY}_cachedAt`;
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
-const defaultStats = () => ({
-  gamesPlayed: 0,
-  wins: 0,
-  currentStreak: 0,
-  maxStreak: 0,
-  lastPlayedDate: null,
-  guessDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, "7+": 0 },
-});
-
-function loadStats(difficulty) {
+// Lee la lista de personajes de la caché local; devuelve null si no existe, caducó o está corrupta
+function readCachedCharacters() {
   try {
-    const raw = localStorage.getItem(STATS_KEY(difficulty));
-    return raw ? { ...defaultStats(), ...JSON.parse(raw) } : defaultStats();
+    const cached = localStorage.getItem(CACHE_KEY);
+    const cachedAt = Number(localStorage.getItem(CACHE_KEY_AT));
+    if (!cached || !cachedAt || Date.now() - cachedAt > ONE_DAY_MS) return null;
+    const parsed = JSON.parse(cached);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
   } catch {
-    return defaultStats();
+    return null;
   }
 }
 
-function saveStats(difficulty, stats) {
-  localStorage.setItem(STATS_KEY(difficulty), JSON.stringify(stats));
-}
-
-// Actualiza las estadísticas al terminar una partida  
-function updateStats(difficulty, won, attempts) {
-  const stats = loadStats(difficulty);
-  const today = new Date().toISOString().split("T")[0];
-
-  // Evitar contar la misma partida dos veces si el jugador recarga  
-  if (stats.lastPlayedDate === today) return stats;
-
-  stats.gamesPlayed += 1;
-  stats.lastPlayedDate = today;
-
-  // Actualiza estadísticas según si ganó  
-  if (won) {
-    stats.wins += 1;
-    stats.currentStreak += 1;
-    stats.maxStreak = Math.max(stats.maxStreak, stats.currentStreak);
-    const bucket = attempts <= 6 ? String(attempts) : "7+";
-    stats.guessDistribution[bucket] = (stats.guessDistribution[bucket] || 0) + 1;
-  } else {
-    stats.currentStreak = 0;
+// Guarda la lista y borra las cachés de despliegues anteriores (cada build usa una clave distinta)
+function writeCachedCharacters(data) {
+  try {
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith(CACHE_PREFIX) && !k.startsWith(CACHE_KEY))
+      .forEach((k) => localStorage.removeItem(k));
+    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+    localStorage.setItem(CACHE_KEY_AT, String(Date.now()));
+  } catch {
+    // localStorage no disponible o lleno: la app sigue funcionando sin caché
   }
-
-  saveStats(difficulty, stats);
-  return stats;
 }
 
 
@@ -95,7 +74,7 @@ function loadSession(difficulty) {
 function saveSession(difficulty, state) {
   try {
     localStorage.setItem(SESSION_KEY(difficulty), JSON.stringify(state));
-  } catch { }
+  } catch { /* sin localStorage no se persiste la sesión */ }
 }
 
 
@@ -113,47 +92,65 @@ function App() {
   const earnedCharges = HINT_CHARGE_THRESHOLDS.filter((t) => attempts >= t).length; // Cargas de pistas ganadas según los intentos realizados
   const availableCharges = Math.min(MAX_HINTS, earnedCharges) - hints.length; // Cargas de pistas disponibles = ganadas menos las pistas ya consumidas
   const [toast, setToast] = useState({ message: "", show: false }); // Estado para mostrar mensajes de error o información al jugador  
-  const [characterNames, setCharacterNames] = useState([]); // Lista de nombres de personajes cargada desde la API  
-  const [difficulty, setDifficulty] = useState("normal"); // Dificultad actual del juego (normal o kiwami)  
+  // FIX (bug 1): la lista completa (nombre, imagen, alias...) se carga aquí una sola vez y se pasa a GuessInput
+  const [characters, setCharacters] = useState([]);
+  const characterNames = characters.map((c) => c.name); // Lista de nombres de personajes
+  const [difficulty, setDifficulty] = useState("normal"); // Dificultad actual del juego (normal, kiwami o infinite)  
 
   const [infiniteTarget, setInfiniteTarget] = useState(null); // Nombre del personaje objetivo en modo infinito  
 
   const [stats, setStats] = useState(() => loadStats("normal")); // Estadísticas del jugador para la dificultad actual    
   const [showStats, setShowStats] = useState(false); // Controla la visibilidad del modal de estadísticas    
-  const [isLoading, setIsLoading] = useState(false); // Controla si la lista de personajes se está cargando  
+  const [isLoading, setIsLoading] = useState(false); // Controla si hay una petición en curso  
   const [gameLost, setGameLost] = useState(initialSession?.gameLost ?? false); // Controla si el jugador ha perdido
 
-  // Carga inicial de la lista de personajes con caché de 24h    
-  useEffect(() => {
-    const cached = localStorage.getItem(CACHE_KEY);
-    const cachedAt = localStorage.getItem(CACHE_KEY_AT);
-    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-    const isExpired = !cachedAt || (Date.now() - Number(cachedAt)) > ONE_DAY_MS;
-
-    // Si hay datos de los personajes en caché y no han expirado, se usan  
-    if (cached && !isExpired) {
-      setCharacterNames(JSON.parse(cached).map(item => item.name));
-    }
-    // Si no, se hace la petición a la API para obtener la lista de personajes y se guarda en caché  
-    else {
-      getCharacterList()
-        .then(data => {
-          localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-          localStorage.setItem(CACHE_KEY_AT, String(Date.now()));
-          setCharacterNames(data.map(item => item.name));
-        })
-        .catch(() => showToastMessage("Error loading character list."));
-    }
-  }, []);
-
-  // Función para mostrar mensajes de error o información al jugador  
-  const showToastMessage = (msg) => {
+  // Funciones estables (useCallback) para que no cambien en cada render
+  const showToastMessage = useCallback((msg) => {
     setToast({ message: msg, show: true });
+  }, []);
+  const closeToast = useCallback(() => setToast({ show: false, message: "" }), []);
+
+  // Carga inicial de la lista de personajes con caché de 24h
+  // Las dependencias son estables y no hay reintentos en cascada: como mucho una petición por montaje, y si falla se avisa una sola vez
+  useEffect(() => {
+    let cancelled = false;
+
+    const cached = readCachedCharacters();
+    if (cached) {
+      setCharacters(cached);
+      return;
+    }
+
+    getCharacterList()
+      .then((data) => {
+        if (cancelled) return;
+        setCharacters(data);
+        writeCachedCharacters(data);
+      })
+      .catch(() => {
+        if (!cancelled) showToastMessage("Error loading character list.");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showToastMessage]);
+
+  // Persiste la sesión salvo en modo infinito (no se reanuda, su objetivo es aleatorio en el cliente)
+  const persistSession = (state) => {
+    if (difficulty !== "infinite") saveSession(difficulty, state);
   };
 
   // Maneja el cambio de dificultad del juego  
   const handleDifficultyChange = (newDifficulty) => {
     if (newDifficulty === difficulty) return;
+
+    // Sin lista cargada no hay objetivo aleatorio: antes se comparaba en silencio contra el diario
+    if (newDifficulty === "infinite" && characterNames.length === 0) {
+      showToastMessage("Character list not loaded yet. Try again in a moment.");
+      return;
+    }
+
     setDifficulty(newDifficulty);
     setStats(loadStats(newDifficulty));
     setGuesses([]);
@@ -201,12 +198,23 @@ function App() {
     setHints([]);
   };
 
-  // Revela el personaje objetivo del día usando /start + /daily-target  
+  // Revela el personaje objetivo.
+  // FIX (bug 3): en modo infinito el objetivo lo eligió el cliente (infiniteTarget), así que se
+  // construye con los datos de la lista. Antes se pedía el personaje DIARIO de Kiwami: se mostraba
+  // un personaje equivocado y además se filtraba la respuesta del día.
   const revealTarget = async () => {
+    if (difficulty === "infinite") {
+      if (!infiniteTarget) return null;
+      const item = characters.find((c) => c.name === infiniteTarget);
+      const target = { name: infiniteTarget, images: item?.image ? [item.image] : [] };
+      setTargetCharacter(target);
+      return target;
+    }
+
+    // Modos diarios: /start + /daily-target
     try {
-      const backendDifficulty = difficulty === "infinite" ? "kiwami" : difficulty;
-      const { token } = await getStartToken(backendDifficulty);
-      const target = await getDailyTarget(backendDifficulty, token);
+      const { token } = await getStartToken(difficulty);
+      const target = await getDailyTarget(difficulty, token);
       setTargetCharacter(target);
       return target;
     } catch (error) {
@@ -217,8 +225,15 @@ function App() {
 
   // Maneja el intento de adivinar un personaje  
   const handleGuess = async (name) => {
-    // Evitar hacer múltiples peticiones si no se ha cargado la lista de personajes o si se está procesando otro guess  
-    if (isLoading) return;
+    // Evitar peticiones simultáneas o intentos cuando la partida ya terminó
+    if (isLoading || gameWon || gameLost) return;
+
+    // FIX (bug 5): defensa final contra intentos repetidos (no gastan intento ni duplican filas)
+    if (guesses.some((g) => g.name === name)) {
+      showToastMessage(`You already guessed ${name}.`);
+      return;
+    }
+
     setIsLoading(true);
     try {
       // Llamada al backend: en modo infinito se pasa el objetivo aleatorio; si no, se usa el diario  
@@ -244,7 +259,7 @@ function App() {
         revealed = await revealTarget();
       }
 
-      saveSession(difficulty, {
+      persistSession({
         guesses: newGuesses,
         attempts: newAttempts,
         gameWon: isCorrect,
@@ -255,17 +270,17 @@ function App() {
         hints,
       });
 
-      if (isCorrect && !gameWon) {  
-        setGameWon(true);  
-        setTargetCharacter(data.target); // <-- AÑADIR: guarda el objetivo revelado para que la tarjeta salga verde  
-        const updated = updateStats(difficulty, true, newAttempts);  
-        setStats(updated);  
-        const totalAnimationTime = 4000;  
-        setTimeout(() => {  
-          setShowCelebration(true);  
-          window.scrollTo({ top: 0, behavior: "smooth" });  
-        }, totalAnimationTime);  
-      } else if (isLoss && !gameLost) {
+      if (isCorrect) {
+        setGameWon(true);
+        setTargetCharacter(data.target); // guarda el objetivo revelado para que la tarjeta salga verde
+        const updated = updateStats(difficulty, true, newAttempts);
+        setStats(updated);
+        const totalAnimationTime = 4000;
+        setTimeout(() => {
+          setShowCelebration(true);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }, totalAnimationTime);
+      } else if (isLoss) {
         setGameLost(true);
         const updated = updateStats(difficulty, false, newAttempts);
         setStats(updated);
@@ -273,8 +288,11 @@ function App() {
       }
     } catch (error) {
       console.error("Error submitting guess:", error);
+      // FIX (bug 5): mensajes distintos según el error, no todo es "Network error"
       if (error.status === 429) {
         showToastMessage("Too many requests, please slow down.");
+      } else if (error.status === 404) {
+        showToastMessage("Character not found.");
       } else {
         showToastMessage("Network error. Please try again.");
       }
@@ -292,7 +310,7 @@ function App() {
     const revealed = await revealTarget();
     const updated = updateStats(difficulty, false, MAX_ATTEMPTS);
     setStats(updated);
-    saveSession(difficulty, {
+    persistSession({
       guesses,
       attempts: MAX_ATTEMPTS,
       gameWon: false,
@@ -350,21 +368,21 @@ function App() {
   };
 
   // Maneja la solicitud de una pista  
-  const handleHint = async () => {  
+  const handleHint = async () => {
     // Solo se puede pedir pista si hay una carga disponible  
-    if (hints.length >= MAX_HINTS) {  
-      showToastMessage("You reached the maximum number of hints for this game.");  
-      return;  
-    }  
-    if (availableCharges <= 0) {  
+    if (hints.length >= MAX_HINTS) {
+      showToastMessage("You reached the maximum number of hints for this game.");
+      return;
+    }
+    if (availableCharges <= 0) {
       // Próximo intento que otorga una carga
-      const next = HINT_CHARGE_THRESHOLDS[hints.length];  
-      showToastMessage(  
-        next  
-          ? `You can get a new hint after attempt number ${next}`  
-          : "There are no more hints available for this game"  
-      );  
-      return;  
+      const next = HINT_CHARGE_THRESHOLDS[hints.length];
+      showToastMessage(
+        next
+          ? `You can get a new hint after attempt number ${next}`
+          : "There are no more hints available for this game"
+      );
+      return;
     }
 
     // Campos de pistas posibles  
@@ -405,7 +423,7 @@ function App() {
       const newHints = [...hints, { field: fieldLabels[data.field], value: displayValue }];
       setUsedHintFields(newUsedHintFields);
       setHints(newHints);
-      saveSession(difficulty, {
+      persistSession({
         guesses,
         attempts,
         gameWon,
@@ -466,74 +484,75 @@ function App() {
 
           {!gameWon && !gameLost ? (
             <GuessInput
+              characters={characters}
               onGuess={handleGuess}
               onError={showToastMessage}
               difficulty={difficulty}
               guessedNames={guesses.map(g => g.name)}
               isLoading={isLoading}
             />
-          ) : gameLost ? (  
-            <div className="surrender-screen">  
-              <h2>You lost!</h2>  
-              <p>The character was:</p>  
-              {targetCharacter?.images?.[0] && (  
-                <img  
-                  className="surrender-character-image"  
-                  src={`${IMAGE_BASE_URL}${targetCharacter.images[0]}`}  
-                  alt={targetCharacter.name}  
-                />  
-              )}  
-              <p className="surrender-character-name">{targetCharacter?.name}</p>  
-              <button className="guess-button" onClick={handleShare}>  
-                📋 Share result  
-              </button>  
-              {difficulty === "infinite" && (  
-                <button className="guess-button" onClick={handleChangeTarget}>  
-                  🔄 Change Target  
-                </button>  
-              )}  
-              {difficulty !== "infinite" && <Countdown />}  
-            </div>  
-          ) : showCelebration && difficulty !== "infinite" ? (  
-           <>  
-             <Celebration onShare={handleShare} target={targetCharacter} />  
-             <Countdown />  
-           </> 
-          ) : gameWon && difficulty === "infinite" ? ( 
-            <div className="surrender-screen">  
-              <h2>You got it!</h2>  
-              <p>The character was:</p>  
-              {targetCharacter?.images?.[0] && (  
-                <img  
-                  className="surrender-character-image"  
-                  src={`${IMAGE_BASE_URL}${targetCharacter.images[0]}`}  
-                  alt={targetCharacter.name}  
-                />  
-              )}  
-              <p className="surrender-character-name">{targetCharacter?.name}</p>  
-              <button className="guess-button" onClick={handleShare}>  
-                📋 Share result  
-              </button>  
-              <button className="guess-button" onClick={handleChangeTarget}>  
-                🔄 Change Target  
-              </button>  
+          ) : gameLost ? (
+            <div className="surrender-screen">
+              <h2>You lost!</h2>
+              <p>The character was:</p>
+              {targetCharacter?.images?.[0] && (
+                <img
+                  className="surrender-character-image"
+                  src={`${IMAGE_BASE_URL}${targetCharacter.images[0]}`}
+                  alt={targetCharacter.name}
+                />
+              )}
+              <p className="surrender-character-name">{targetCharacter?.name}</p>
+              <button className="guess-button" onClick={handleShare}>
+                📋 Share result
+              </button>
+              {difficulty === "infinite" && (
+                <button className="guess-button" onClick={handleChangeTarget}>
+                  🔄 Change Target
+                </button>
+              )}
+              {difficulty !== "infinite" && <Countdown />}
             </div>
-          ) : (  
-            <div className="waiting-message">  
-              🎉 You got it! 🎉  
-              {targetCharacter?.images?.[0] && (  
-                <img  
-                  className="surrender-character-image"  
-                  src={`${IMAGE_BASE_URL}${targetCharacter.images[0]}`}  
-                  alt={targetCharacter.name}  
-                />  
-              )}  
-              <p className="surrender-character-name">{targetCharacter?.name}</p>  
-              <button className="guess-button" onClick={handleShare}>  
-                📋 Share result  
-              </button>  
-              <Countdown />  
-            </div>  
+          ) : showCelebration && difficulty !== "infinite" ? (
+            <>
+              <Celebration onShare={handleShare} target={targetCharacter} />
+              <Countdown />
+            </>
+          ) : gameWon && difficulty === "infinite" ? (
+            <div className="surrender-screen">
+              <h2>You got it!</h2>
+              <p>The character was:</p>
+              {targetCharacter?.images?.[0] && (
+                <img
+                  className="surrender-character-image"
+                  src={`${IMAGE_BASE_URL}${targetCharacter.images[0]}`}
+                  alt={targetCharacter.name}
+                />
+              )}
+              <p className="surrender-character-name">{targetCharacter?.name}</p>
+              <button className="guess-button" onClick={handleShare}>
+                📋 Share result
+              </button>
+              <button className="guess-button" onClick={handleChangeTarget}>
+                🔄 Change Target
+              </button>
+            </div>
+          ) : (
+            <div className="waiting-message">
+              🎉 You got it! 🎉
+              {targetCharacter?.images?.[0] && (
+                <img
+                  className="surrender-character-image"
+                  src={`${IMAGE_BASE_URL}${targetCharacter.images[0]}`}
+                  alt={targetCharacter.name}
+                />
+              )}
+              <p className="surrender-character-name">{targetCharacter?.name}</p>
+              <button className="guess-button" onClick={handleShare}>
+                📋 Share result
+              </button>
+              <Countdown />
+            </div>
           )}
         </header>
 
@@ -544,17 +563,17 @@ function App() {
         )}
       </div>
 
-      {attempts > 0 && !gameWon && (  
-        <div className="action-bar">  
-          <button  
-            className="hint-button"  
-            onClick={handleHint}  
-            disabled={availableCharges <= 0 || hints.length >= MAX_HINTS}  
-          >  
-            💡 Hint ({availableCharges} · {hints.length}/{MAX_HINTS})  
-          </button>  
-        </div>  
-    )}
+      {attempts > 0 && !gameWon && (
+        <div className="action-bar">
+          <button
+            className="hint-button"
+            onClick={handleHint}
+            disabled={availableCharges <= 0 || hints.length >= MAX_HINTS}
+          >
+            💡 Hint ({availableCharges} · {hints.length}/{MAX_HINTS})
+          </button>
+        </div>
+      )}
 
       {hints.length > 0 && (
         <div className="hints-area">
@@ -577,10 +596,7 @@ function App() {
       </div>
 
       {toast.show && (
-        <Toast
-          message={toast.message}
-          onClose={() => setToast({ show: false, message: "" })}
-        />
+        <Toast message={toast.message} onClose={closeToast} />
       )}
     </div>
   );
