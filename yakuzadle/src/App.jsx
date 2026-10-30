@@ -13,9 +13,6 @@ import {
   guessCharacter,
   getCharacterList,
   getHint,
-  setDebugTarget,
-  getStartToken,
-  getDailyTarget,
   IMAGE_BASE_URL,
 } from "./services/api";
 
@@ -29,7 +26,7 @@ const CACHE_KEY = `${CACHE_PREFIX}${import.meta.env.VITE_BUILD_HASH || "dev"}`;
 const CACHE_KEY_AT = `${CACHE_KEY}_cachedAt`;
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
-// Lee la lista de personajes de la caché local; devuelve null si no existe, caducó o está corrupta
+// Lee la lista de personajes de la caché local y devuelve null si no existe, caducó o está corrupta
 function readCachedCharacters() {
   try {
     const cached = localStorage.getItem(CACHE_KEY);
@@ -65,7 +62,11 @@ const SESSION_KEY = (difficulty) => {
 function loadSession(difficulty) {
   try {
     const raw = localStorage.getItem(SESSION_KEY(difficulty));
-    return raw ? JSON.parse(raw) : null;
+    const session = raw ? JSON.parse(raw) : null;
+    // Una partida diaria en curso sin estado firmado (guardada antes de esta versión) no se puede
+    // continuar, el servidor no reconocería sus intentos. Las ya terminadas sí se muestran
+    if (session && !session.gameWon && !session.gameLost && session.attempts > 0 && !session.gameState) return null;
+    return session;
   } catch {
     return null;
   }
@@ -89,29 +90,30 @@ function App() {
   const [attempts, setAttempts] = useState(initialSession?.attempts ?? 0); // Número de intentos realizados  
   const [usedHintFields, setUsedHintFields] = useState(initialSession?.usedHintFields ?? []); // Campos de pistas ya utilizados  
   const [hints, setHints] = useState(initialSession?.hints ?? []); // Lista de pistas obtenidas
+  // Estado de partida firmado por el servidor (solo modos diarios): se reenvía en cada intento/pista
+  const [gameState, setGameState] = useState(initialSession?.gameState ?? null);
   const earnedCharges = HINT_CHARGE_THRESHOLDS.filter((t) => attempts >= t).length; // Cargas de pistas ganadas según los intentos realizados
   const availableCharges = Math.min(MAX_HINTS, earnedCharges) - hints.length; // Cargas de pistas disponibles = ganadas menos las pistas ya consumidas
   const [toast, setToast] = useState({ message: "", show: false }); // Estado para mostrar mensajes de error o información al jugador  
-  // FIX (bug 1): la lista completa (nombre, imagen, alias...) se carga aquí una sola vez y se pasa a GuessInput
+  // La lista completa de personajes y sus datos se carga aquí una sola vez y se pasa a GuessInput
   const [characters, setCharacters] = useState([]);
   const characterNames = characters.map((c) => c.name); // Lista de nombres de personajes
-  const [difficulty, setDifficulty] = useState("normal"); // Dificultad actual del juego (normal, kiwami o infinite)  
+  const [difficulty, setDifficulty] = useState("normal"); // Dificultad actual del juego (normal, kiwami o infinite)
 
-  const [infiniteTarget, setInfiniteTarget] = useState(null); // Nombre del personaje objetivo en modo infinito  
+  const [infiniteTarget, setInfiniteTarget] = useState(null); // Nombre del personaje objetivo en modo infinito
 
-  const [stats, setStats] = useState(() => loadStats("normal")); // Estadísticas del jugador para la dificultad actual    
-  const [showStats, setShowStats] = useState(false); // Controla la visibilidad del modal de estadísticas    
-  const [isLoading, setIsLoading] = useState(false); // Controla si hay una petición en curso  
+  const [stats, setStats] = useState(() => loadStats("normal")); // Estadísticas del jugador para la dificultad actual
+  const [showStats, setShowStats] = useState(false); // Controla la visibilidad del modal de estadísticas
+  const [isLoading, setIsLoading] = useState(false); // Controla si hay una petición en curso
   const [gameLost, setGameLost] = useState(initialSession?.gameLost ?? false); // Controla si el jugador ha perdido
 
-  // Funciones estables (useCallback) para que no cambien en cada render
+  // Funciones estables para que no cambien en cada render
   const showToastMessage = useCallback((msg) => {
     setToast({ message: msg, show: true });
   }, []);
   const closeToast = useCallback(() => setToast({ show: false, message: "" }), []);
 
   // Carga inicial de la lista de personajes con caché de 24h
-  // Las dependencias son estables y no hay reintentos en cascada: como mucho una petición por montaje, y si falla se avisa una sola vez
   useEffect(() => {
     let cancelled = false;
 
@@ -145,7 +147,7 @@ function App() {
   const handleDifficultyChange = (newDifficulty) => {
     if (newDifficulty === difficulty) return;
 
-    // Sin lista cargada no hay objetivo aleatorio: antes se comparaba en silencio contra el diario
+    // Sin lista cargada no hay objetivo aleatorio
     if (newDifficulty === "infinite" && characterNames.length === 0) {
       showToastMessage("Character list not loaded yet. Try again in a moment.");
       return;
@@ -161,6 +163,7 @@ function App() {
     setTargetCharacter(null);
     setUsedHintFields([]);
     setHints([]);
+    setGameState(null);
 
     if (newDifficulty === "infinite") {
       const randomName = pickRandomInfiniteTarget(characterNames);
@@ -175,6 +178,7 @@ function App() {
       setTargetCharacter(session?.targetCharacter ?? null);
       setUsedHintFields(session?.usedHintFields ?? []);
       setHints(session?.hints ?? []);
+      setGameState(session?.gameState ?? null);
     }
   };
 
@@ -196,31 +200,21 @@ function App() {
     setTargetCharacter(null);
     setUsedHintFields([]);
     setHints([]);
+    setGameState(null);
   };
 
-  // Revela el personaje objetivo.
-  // FIX (bug 3): en modo infinito el objetivo lo eligió el cliente (infiniteTarget), así que se
-  // construye con los datos de la lista. Antes se pedía el personaje DIARIO de Kiwami: se mostraba
-  // un personaje equivocado y además se filtraba la respuesta del día.
-  const revealTarget = async () => {
-    if (difficulty === "infinite") {
-      if (!infiniteTarget) return null;
-      const item = characters.find((c) => c.name === infiniteTarget);
-      const target = { name: infiniteTarget, images: item?.image ? [item.image] : [] };
-      setTargetCharacter(target);
-      return target;
-    }
+  // Revelar objetivo del modo infinito al perder
+  const revealInfiniteTarget = () => {
+    if (!infiniteTarget) return null;
+    const item = characters.find((c) => c.name === infiniteTarget);
+    return { name: infiniteTarget, images: item?.image ? [item.image] : [] };
+  };
 
-    // Modos diarios: /start + /daily-target
-    try {
-      const { token } = await getStartToken(difficulty);
-      const target = await getDailyTarget(difficulty, token);
-      setTargetCharacter(target);
-      return target;
-    } catch (error) {
-      console.error("Error revealing target:", error);
-      return null;
-    }
+  // Partida inválida para el servidor: se descarta y se recarga
+  const resetStaleSession = () => {
+    try { localStorage.removeItem(SESSION_KEY(difficulty)); } catch { /* sin localStorage */ }
+    showToastMessage("Your game was out of date. Reloading...");
+    setTimeout(() => window.location.reload(), 1500);
   };
 
   // Maneja el intento de adivinar un personaje  
@@ -228,7 +222,7 @@ function App() {
     // Evitar peticiones simultáneas o intentos cuando la partida ya terminó
     if (isLoading || gameWon || gameLost) return;
 
-    // FIX (bug 5): defensa final contra intentos repetidos (no gastan intento ni duplican filas)
+    // Defensa final contra intentos repetidos (no gastan intento ni duplican filas)
     if (guesses.some((g) => g.name === name)) {
       showToastMessage(`You already guessed ${name}.`);
       return;
@@ -236,14 +230,14 @@ function App() {
 
     setIsLoading(true);
     try {
-      // Llamada al backend: en modo infinito se pasa el objetivo aleatorio; si no, se usa el diario  
+      // Llamada al backend en modo infinito se pasa el objetivo aleatorio; si no, se usa el diario
       const data = await guessCharacter(
         name,
         difficulty === "infinite" ? "kiwami" : difficulty,
-        difficulty === "infinite" ? infiniteTarget : null
+        difficulty === "infinite" ? { targetName: infiniteTarget } : { state: gameState }
       );
 
-      // La corrección la decide el servidor (campo `correct` de /guess)  
+      // La corrección la decide el servidor
       const isCorrect = data.correct;
 
       const newAttempts = attempts + 1;
@@ -251,20 +245,24 @@ function App() {
       setGuesses(newGuesses);
       setAttempts(newAttempts);
 
-      // ¿Se ha perdido por agotar los intentos sin acertar?  
-      const isLoss = !isCorrect && newAttempts >= MAX_ATTEMPTS;
+      // Comprueba si se ha perdido por llegar a intentos máximos. En los modos diarios lo decide el servidor, en infinito se cuenta aquí
+      const isLoss = difficulty === "infinite" ? !isCorrect && newAttempts >= MAX_ATTEMPTS : !!data.lost;
+      const newGameState = difficulty === "infinite" ? null : (data.state ?? null);
 
       let revealed = targetCharacter;
       if (isLoss) {
-        revealed = await revealTarget();
+        revealed = difficulty === "infinite" ? revealInfiniteTarget() : data.target;
+        setTargetCharacter(revealed);
       }
+      setGameState(newGameState);
 
       persistSession({
         guesses: newGuesses,
         attempts: newAttempts,
         gameWon: isCorrect,
         gameLost: isLoss,
-        // Se persiste el objetivo si se acierta o si se pierde  
+        gameState: newGameState,
+        // Se persiste el objetivo si se acierta o si se pierde
         targetCharacter: isCorrect ? data.target : (isLoss ? revealed : targetCharacter),
         usedHintFields,
         hints,
@@ -272,7 +270,7 @@ function App() {
 
       if (isCorrect) {
         setGameWon(true);
-        setTargetCharacter(data.target); // guarda el objetivo revelado para que la tarjeta salga verde
+        setTargetCharacter(data.target); // Guarda el objetivo revelado para que la tarjeta salga verde
         const updated = updateStats(difficulty, true, newAttempts);
         setStats(updated);
         const totalAnimationTime = 4000;
@@ -288,11 +286,17 @@ function App() {
       }
     } catch (error) {
       console.error("Error submitting guess:", error);
-      // FIX (bug 5): mensajes distintos según el error, no todo es "Network error"
+      // Mensajes distintos según el error
       if (error.status === 429) {
         showToastMessage("Too many requests, please slow down.");
       } else if (error.status === 404) {
         showToastMessage("Character not found.");
+      } else if (error.status === 409 && error.code === "already_guessed") {
+        showToastMessage(`You already guessed ${name}.`);
+      } else if (error.status === 409) {
+        resetStaleSession(); // stale_state / game_over
+      } else if (error.status === 503) {
+        showToastMessage("The server is waking up. Try again in a few seconds.");
       } else {
         showToastMessage("Network error. Please try again.");
       }
@@ -302,28 +306,7 @@ function App() {
   };
 
 
-  // Maneja la rendición: completa el límite de intentos y termina la partida como derrota  
-  const handleSurrender = async () => {
-    if (gameWon || gameLost) return;
-    setAttempts(MAX_ATTEMPTS);
-    setGameLost(true);
-    const revealed = await revealTarget();
-    const updated = updateStats(difficulty, false, MAX_ATTEMPTS);
-    setStats(updated);
-    persistSession({
-      guesses,
-      attempts: MAX_ATTEMPTS,
-      gameWon: false,
-      gameLost: true,
-      targetCharacter: revealed,
-      usedHintFields,
-      hints,
-    });
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-
-  // Reinicia el juego para jugar de nuevo  
+  // Reinicia el juego para jugar de nuevo
   const handlePlayAgain = () => {
     setGuesses([]);
     setGameWon(false);
@@ -335,7 +318,7 @@ function App() {
     setHints([]);
   };
 
-  // Copia el resultado tipo Wordle al portapapeles  
+  // Copia el resultado tipo Wordle al portapapeles
   const handleShare = async () => {
     const text = buildShareText(guesses, difficulty, attempts, gameWon, MAX_ATTEMPTS);
     try {
@@ -346,30 +329,9 @@ function App() {
     }
   };
 
-  // Función para establecer un nuevo objetivo aleatorio en modo debug  
-  const handleDebugNewTarget = async () => {
-    if (characterNames.length === 0) {
-      showToastMessage("No characters loaded");
-      return;
-    }
-    const randomName = characterNames[Math.floor(Math.random() * characterNames.length)];
-    try {
-      await setDebugTarget(randomName, difficulty);
-      setGuesses([]);
-      setGameWon(false);
-      setShowCelebration(false);
-      setAttempts(0);
-      setTargetCharacter(null);
-      showToastMessage(`New target set: ${randomName}`);
-    } catch (error) {
-      console.error("Error setting debug target:", error);
-      showToastMessage("Failed to set debug target");
-    }
-  };
-
-  // Maneja la solicitud de una pista  
+  // Maneja la solicitud de una pista
   const handleHint = async () => {
-    // Solo se puede pedir pista si hay una carga disponible  
+    // Solo se puede pedir pista si hay una carga disponible
     if (hints.length >= MAX_HINTS) {
       showToastMessage("You reached the maximum number of hints for this game.");
       return;
@@ -387,26 +349,28 @@ function App() {
 
     // Campos de pistas posibles  
     const HINT_FIELDS = ["affiliation", "nationality", "games", "fighting_style", "height", "date_of_birth"];
-    // Filtra los campos de pistas que ya han sido utilizados o que ya se han adivinado correctamente  
+    // Filtra los campos de pistas que ya han sido utilizados o que ya se han adivinado correctamente
     const correctFields = HINT_FIELDS.filter((field) =>
       guesses.some((g) => g.comparison?.[field] === "green")
     );
     const allUsed = [...new Set([...usedHintFields, ...correctFields])];
 
     try {
+      // Diario: el servidor elige el campo a partir del estado firmado. Infinito: lo decide el cliente
       const data = await getHint(
         difficulty === "infinite" ? "kiwami" : difficulty,
-        allUsed,
-        difficulty === "infinite" ? infiniteTarget : null
+        difficulty === "infinite"
+          ? { usedFields: allUsed, targetName: infiniteTarget }
+          : { state: gameState }
       );
 
-      // Si todos los campos de pistas han sido utilizados, muestra un mensaje y no solicita más pistas  
+      // Si todos los campos de pistas han sido utilizados, muestra un mensaje y no solicita más pistas
       if (data.noHints) {
         showToastMessage("No hints available");
         return;
       }
 
-      // Muestra el valor de la pista, ya sea como un array o un string  
+      // Muestra el valor de la pista, ya sea como un array o un string
       const displayValue = Array.isArray(data.value) ? data.value.join(", ") : data.value;
 
       const fieldLabels = {
@@ -418,23 +382,29 @@ function App() {
         date_of_birth: "Birthdate",
       };
 
-      // Actualiza los campos de pistas utilizados y las pistas obtenidas, y guarda la sesión  
+      // Actualiza los campos de pistas utilizados y las pistas obtenidas, y guarda la sesión
       const newUsedHintFields = [...usedHintFields, data.field];
       const newHints = [...hints, { field: fieldLabels[data.field], value: displayValue }];
+      const newGameState = difficulty === "infinite" ? null : (data.state ?? gameState);
       setUsedHintFields(newUsedHintFields);
       setHints(newHints);
+      setGameState(newGameState);
       persistSession({
         guesses,
         attempts,
         gameWon,
         gameLost,
+        gameState: newGameState,
         targetCharacter,
         usedHintFields: newUsedHintFields,
         hints: newHints,
       });
     } catch (error) {
       console.error("Error fetching hint:", error);
-      showToastMessage("Could not get hint.");
+      if (error.status === 409) resetStaleSession();
+      else if (error.status === 403) showToastMessage("No hint available yet.");
+      else if (error.status === 429) showToastMessage("Too many requests, please slow down.");
+      else showToastMessage("Could not get hint.");
     }
   };
 

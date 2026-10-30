@@ -1,335 +1,65 @@
-const express = require("express");
-const cors = require("cors");
-const helmet = require("helmet");
-const compression = require("compression");
-const rateLimit = require("express-rate-limit");
-const { db } = require("./firestore.js");
-const { compareCharacters } = require("./compare.js");
-const https = require("https");
-const app = express();
-const crypto = require("crypto");
-const REVEAL_SECRET = process.env.REVEAL_SECRET; // secreto de servidor
+// Arranque del servidor. La lógica está en app.js y services/
 
-
-
-// Configurar CORS para permitir solo los dominios de la app frontend, y solo métodos GET
-app.use(cors({
-  origin: ["https://yamaibot.web.app", "https://yamaibot.firebaseapp.com", "https://laddle.web.app", "https://laddle.firebaseapp.com"],
-  methods: ["GET"],
-}));
-
-// Usar Helmet para configurar cabeceras de seguridad
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  crossOriginEmbedderPolicy: false,
-}));
-
-app.use(compression()); // Comprimir respuestas para mejorar rendimiento
-
-// Limitar peticiones por IP por minuto para prevenir abuso
-app.use(rateLimit({  
-  windowMs: 60 * 1000,  
-  max: 60,
-  message: { error: "Too many requests, please slow down." },  
-  standardHeaders: true,  
-  legacyHeaders: false,  
-  skip: (req) => req.path.startsWith("/images"),  
-}));
-
-app.use(express.json());
-
-let normalCharacterNames = []; // Personajes sin campo difficulty  
-let kiwamiCharacterNames = []; // Todos los personajes  
-let characterDataCache = {};   // Datos completos cacheados para /list
-
-// Dos cachés independientes, una por dificultad  
-let dailyTargets = {
-  normal: { date: null, character: null },
-  kiwami: { date: null, character: null },
-};
-
-
-// Fecha del día en el mismo formato que usa getDailyTarget (UTC)  
-function todayStr() {
-  const d = new Date();
-  const utc = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-  return utc.toISOString().split("T")[0];
-}
-
-function signReveal(dateStr, difficulty) {
-  return crypto.createHmac("sha256", REVEAL_SECRET)
-    .update(`${dateStr}:${difficulty}`)
-    .digest("hex");
-}
-
-// Algoritmo de selección diaria
-
-// Hash numérico simple de un string  
-function hashCode(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (Math.imul(31, hash) + str.charCodeAt(i)) | 0;
-  }
-  return Math.abs(hash);
-}
-
-// Generador pseudoaleatorio con semilla (LCG)  
-function seededRandom(seed) {
-  let s = seed >>> 0;
-  return () => {
-    s = (Math.imul(1664525, s) + 1013904223) >>> 0;
-    return s / 0x100000000;
-  };
-}
-
-// Devuelve el índice del personaje del día usando un shuffle determinista basado en la fecha y la dificultad como semilla  
-function getDailyIndex(names, dateStr, difficulty) {
-  const seed = hashCode(dateStr + ":" + difficulty);
-  const rand = seededRandom(seed);
-  const indices = names.map((_, i) => i);
-  for (let i = indices.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [indices[i], indices[j]] = [indices[j], indices[i]];
-  }
-  return indices[0];
-}
-
-
-
-async function loadCharacterNames() {
-  const snapshot = await db.collection("personajes").get();
-  kiwamiCharacterNames = snapshot.docs.map(doc => doc.id);
-  normalCharacterNames = snapshot.docs
-    .filter(doc => !doc.data().difficulty)
-    .map(doc => doc.id);
-  // Cachear datos completos para que /list no consulte Firestore en cada petición  
-  characterDataCache = {};
-  snapshot.docs.forEach(doc => {
-    characterDataCache[doc.id] = doc.data();
-  });
-  console.log(`Loaded ${kiwamiCharacterNames.length} total characters, ${normalCharacterNames.length} normal`);
-}
-
-
-// Función para obtener el personaje del día, con caché diario por dificultad  
-async function getDailyTarget(difficulty = "normal", date = new Date()) {
-  const utcDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  const dateStr = utcDate.toISOString().split('T')[0];
-
-  const cache = dailyTargets[difficulty] || dailyTargets.normal;
-  if (cache.date === dateStr && cache.character) {
-    return cache.character;
-  }
-
-  const names = difficulty === "kiwami" ? kiwamiCharacterNames : normalCharacterNames;
-  if (names.length === 0) throw new Error("No characters available for difficulty: " + difficulty);
-
-  const index = getDailyIndex(names, dateStr, difficulty);
-  const targetName = names[index];
-
-  const doc = await db.collection("personajes").doc(targetName).get();
-  if (!doc.exists) throw new Error(`Target character ${targetName} not found`);
-
-  dailyTargets[difficulty] = { date: dateStr, character: doc.data() };
-  return doc.data();
-}
-
-
-// Endpoint de depuración: permite cambiar el personaje del día  
-app.get("/debug-set-target", async (req, res) => {
-  if (process.env.NODE_ENV === "production") {
-    return res.status(403).json({ error: "Debug endpoint not available in production" });
-  }
-  const name = req.query.name;
-  const difficulty = req.query.difficulty === "kiwami" ? "kiwami" : "normal";
-  if (!name) return res.status(400).json({ error: "Missing name" });
-
-  try {
-    const doc = await db.collection("personajes").doc(name).get();
-    if (!doc.exists) return res.status(404).json({ error: "Character not found" });
-
-    const todayStr = new Date().toISOString().split('T')[0];
-    dailyTargets[difficulty] = { date: todayStr, character: doc.data() };
-    res.json({ success: true, target: name, difficulty });
-  } catch (error) {
-    console.error("Error setting debug target:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-
-// Endpoint para adivinar un personaje  
-app.get("/guess", async (req, res) => {
-  // Nombre del personaje que el usuario está adivinando
-  const name = req.query.name;
-  // Dificultad: kiwami o normal, por defecto normal
-  const difficulty = req.query.difficulty === "kiwami" ? "kiwami" : "normal";
-  // Nombre del personaje objetivo opcional, para el modo infinito
-  const targetName = req.query.targetName;
-  if (!name) return res.status(400).json({ error: "Missing name" });
-
-  // Obtener el personaje del usuario desde la caché
-  const userChar = getCharacter(name);
-  if (!userChar) return res.status(404).json({ error: "Character not found" });
-
-  // Obtener el personaje objetivo, ya sea del día o especificado por nombre  
-  try {
-    let targetChar;
-    if (targetName) {
-      targetChar = getCharacter(targetName);
-      if (!targetChar) return res.status(404).json({ error: "Target character not found" });
-    } else {
-      targetChar = await getDailyTarget(difficulty);
-    }
-    const result = compareCharacters(userChar, targetChar);
-    // La corrección se decide en el servidor, no en el cliente  
-    const correct = userChar.name === targetChar.name;
-    res.json({
-      character: { ...userChar, games: userChar.appears_in, gender: userChar.gender || "M" },
-      result,
-      correct,
-      // Solo se revela el objetivo (nombre e imágenes) cuando el intento es correcto  
-      target: correct ? { name: targetChar.name, images: targetChar.images || [] } : null,
-    });
-  } catch (error) {
-    console.error("Error getting target:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-
-// Endpoint para listar todos los personajes, usa caché en memoria, sin consultar Firestore  
-app.get("/list", (req, res) => {
-  const items = kiwamiCharacterNames.map(name => {
-    const data = characterDataCache[name] || {};
-    const image = data.images && data.images.length > 0 ? data.images[0] : null;
-    return {
-      name,
-      image: image || null,
-      aliases: data.aliases || [],
-      nicknames: data.nicknames || [],
-      kiwamiOnly: !!data.difficulty,
-    };
-  });
-  res.json(items);
-});
-
-
-// Devuelve el personaje objetivo del día  
-app.get("/daily-target", async (req, res) => {  
-  const difficulty = req.query.difficulty === "kiwami" ? "kiwami" : "normal";  
-  const expected = signReveal(todayStr(), difficulty);  
-  // Sin token válido no se revela el objetivo  
-  if (req.query.token !== expected) {  
-    return res.status(403).json({ error: "Forbidden" });  
-  }  
-  try {  
-    const target = await getDailyTarget(difficulty);  
-    res.json({ name: target.name, images: target.images || [] });  
-  } catch (error) {  
-    console.error("Error fetching daily target:", error);  
-    res.status(500).json({ error: "Could not fetch daily target" });  
-  }  
-});
-
-
-// Emite un token de partida sin revelar el personaje objetivo  
-app.get("/start", (req, res) => {
-  const difficulty = req.query.difficulty === "kiwami" ? "kiwami" : "normal";
-  res.json({ token: signReveal(todayStr(), difficulty) });
-});
-
-
-// Función auxiliar para obtener un personaje por nombre desde la caché
-function getCharacter(name) {
-  return characterDataCache[name] || null;
-}
-
-
-// Muestra una pista aleatoria del personaje objetivo    
-app.get("/hint", async (req, res) => {
-  const difficulty = req.query.difficulty === "kiwami" ? "kiwami" : "normal";
-  // Nombre del personaje objetivo opcional, para el modo infinito
-  const targetName = req.query.targetName || null;
-  // Campos que ya se han usado en pistas anteriores, para no repetirlos
-  const usedFields = req.query.usedFields
-    ? req.query.usedFields.split(",").filter(Boolean)
-    : [];
-
-  // Campos que pueden ser usados como pistas
-  const HINT_FIELDS = ["games", "affiliation", "nationality", "fighting_style", "height", "date_of_birth"];
-
-  try {
-    // Obtener el personaje objetivo, ya sea del día o especificado por nombre
-    let target;
-    if (targetName) {
-      target = getCharacter(targetName);
-      if (!target) return res.status(404).json({ error: "Target character not found" });
-    } else {
-      target = await getDailyTarget(difficulty);
-    }
-
-    // Filtrar los campos que ya se han usado y que tienen valor válido en el personaje objetivo
-    const available = HINT_FIELDS.filter((field) => {
-      if (usedFields.includes(field)) return false;
-      const value = field === "games" ? target.appears_in : target[field];
-      if (!value) return false;
-      if (Array.isArray(value)) return value.length > 0 && !value.every(v => v === "unknown");
-      if (typeof value === "string") return value.trim() !== "" && value.toLowerCase() !== "unknown";
-      return true;
-    });
-
-    // Comprobar si hay campos disponibles para dar una pista
-    if (available.length === 0) {
-      return res.json({ noHints: true });
-    }
-
-    const field = available[Math.floor(Math.random() * available.length)];
-    const value = field === "games" ? target.appears_in : target[field];
-
-    res.json({ field, value });
-  } catch (error) {
-    console.error("Error getting hint:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-
-// Endpoint de salud para monitoreo
-app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
-});
-
-
-// Endpoint para servir imágenes directamente desde GitHub (proxy simple)  
-app.get("/images/:filename", (req, res) => {
-  const filename = req.params.filename;
-
-  // Solo permite nombres de archivo seguros con extensión .png
-  if (!/^[\w\-]+\.png$/.test(filename)) {
-    return res.status(400).send("Invalid filename");
-  }
-
-  // Permitir que estas imágenes se usen en contextos cross-origin (como el frontend) sin bloquearlas por políticas de seguridad del navegador
-  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
-
-  // Construye la URL directa al archivo en GitHub y lo sirve como proxy para evitar problemas de CORS en el frontend
-  const githubUrl = `https://raw.githubusercontent.com/NievesDominguez/Yakuzadle/main/img_yakuzadle/${encodeURIComponent(filename)}`;
-  // Realiza una solicitud HTTPS al archivo en GitHub y lo transmite al cliente con el tipo de contenido correcto
-  https.get(githubUrl, (imgRes) => {
-    res.setHeader("Content-Type", imgRes.headers["content-type"] || "image/png");
-    imgRes.pipe(res);
-  }).on("error", () => res.status(404).send("Image not found"));
-});
-
-
-// Cargar nombres y arrancar servidor
-loadCharacterNames().then(() => {
-  const PORT = process.env.PORT || 3001;
-  app.listen(PORT, () => {
-    console.log(`Yakuzadle backend running on port ${PORT}`);
-  });
-}).catch(err => {
-  console.error("Failed to load character names:", err);
+// Validar REVEAL_SECRET ANTES de cargar nada más. Din él no se puede firmar el estado de partida ni elegir el personaje diario
+const secret = process.env.REVEAL_SECRET;
+if (!secret || secret.length < 16) {
+  console.error(
+    "[FATAL] REVEAL_SECRET is missing or too short (min 16 chars, 32+ recommended).\n" +
+    "        Generate one with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"\n" +
+    "        and set it as an environment variable (see README)."
+  );
   process.exit(1);
+}
+
+const legacyDate = process.env.LEGACY_FIRST_DAY || null;
+if (legacyDate && !/^\d{4}-\d{2}-\d{2}$/.test(legacyDate)) {
+  console.error("[FATAL] LEGACY_FIRST_DAY must have the format YYYY-MM-DD (UTC date).");
+  process.exit(1);
+}
+
+const { db } = require("./firestore.js"); // Valida las variables FIREBASE_* y sale si falta alguna
+const { createApp } = require("./app.js");
+const { createCharacterStore } = require("./services/characterStore.js");
+const { createDailyTargetService } = require("./services/dailyTarget.js");
+const { createImageProxy } = require("./services/imageProxy.js");
+const { createStateCodec } = require("./services/gameState.js");
+
+const store = createCharacterStore({ db });
+const codec = createStateCodec(secret);
+const daily = createDailyTargetService({ db, store, secret, legacyDate });
+const imageProxy = createImageProxy({
+  baseUrl: "https://raw.githubusercontent.com/NievesDominguez/Yakuzadle/main/img_yakuzadle/",
+});
+
+const hops = Number.parseInt(process.env.TRUST_PROXY_HOPS ?? "1", 10);
+const app = createApp({
+  store,
+  daily,
+  codec,
+  imageProxy,
+  trustProxyHops: Number.isNaN(hops) ? 1 : hops,
+  rateLimits: {
+    api: Number(process.env.API_RATE_LIMIT_PER_MIN) || 60,
+    images: Number(process.env.IMAGE_RATE_LIMIT_PER_MIN) || 600,
+  },
+});
+
+// Hasta que lleguen los personajes, /health responde y el resto de endpoints esperan
+const PORT = process.env.PORT || 3001;
+const server = app.listen(PORT, () => console.log(`Yakuzadle backend listening on port ${PORT}`));
+
+// Cargar personajes en segundo plano (y mantenerlos al día con onSnapshot)
+store
+  .start()
+  .then(() => Promise.allSettled([daily.getDailyTarget("normal"), daily.getDailyTarget("kiwami")])) // Precalentar el objetivo del día
+  .catch((err) => console.error("[FATAL] Could not start character store:", err));
+
+process.on("unhandledRejection", (reason) => console.error("Unhandled rejection:", reason));
+
+// Render envía SIGTERM al desplegar: cerrar limpiamente
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received, shutting down");
+  store.stop();
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 5000).unref();
 });

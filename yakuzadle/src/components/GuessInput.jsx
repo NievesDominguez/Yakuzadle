@@ -68,6 +68,7 @@ function GuessInput({ characters, onGuess, onError, difficulty, guessedNames, is
         />
         <button className="guess-button" disabled={isLoading}>Guess</button>
       </form>
+      
       {/* Sugerencias de personajes que coinciden con el input, mostrando imagen, nombre y alias coincidente */}
       {suggestions.length > 0 && (
         <div className="autocomplete-box">
