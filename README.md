@@ -41,7 +41,7 @@ Requisitos: Node.js 20.6+ y un proyecto de Firebase con Firestore (colección `p
 ```bash
 cd yakuzadle-backend
 npm install
-node --env-file=.env server.js    # http://localhost:3001
+node --env-file=.env server.js  # http://localhost:3001
 ```
 
 **Frontend**
@@ -49,7 +49,7 @@ node --env-file=.env server.js    # http://localhost:3001
 ```bash
 cd yakuzadle
 npm install
-npm run dev                       # http://localhost:5173
+npm run dev  # http://localhost:5173
 ```
 
 En desarrollo el frontend apunta a `http://localhost:3001` (`yakuzadle/.env.development`).
@@ -66,8 +66,6 @@ En desarrollo el frontend apunta a `http://localhost:3001` (`yakuzadle/.env.deve
 | `API_RATE_LIMIT_PER_MIN` / `IMAGE_RATE_LIMIT_PER_MIN` | No | Límites por minuto. Por defecto `60` / `600` |
 
 ## API
-
-`difficulty` acepta `normal` o `kiwami` (cualquier otro valor se trata como `normal`).
 
 | Ruta | Descripción |
 |---|---|
