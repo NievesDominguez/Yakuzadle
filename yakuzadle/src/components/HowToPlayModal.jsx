@@ -109,13 +109,35 @@ function HowToPlayModal({ onClose }) {
               Nationality and heritage are difficult things to determine for some characters. As most of them could
               be considered Japanese for one reason or another, I&rsquo;ve tried to keep it simple and useful for the game and omit
               the Japanese nationality for most characters that have a different heritage. If we know the character is mixed, though,
-              or if the their heritage is Japanese but they&rsquo;re somehow heavily related to another place, then both might appear.
-              Ex: Ichiban will appear as both Japanese and Hawaiian, but Zhao as only Chinese.
+              or if the their heritage is Japanese but they&rsquo;re somehow heavily related to another place, then both might appear. <br />
+              Example: Ichiban will appear as both Japanese and Hawaiian, but Zhao as only Chinese. <br />
               You might find some other surprises for a certain set of characters here, but I won&rsquo;t ruin the surprise for you.
             </li>
             <li>
               You will find certain special cases where columns you might not expect will appear in yellow. Find out why, there&rsquo;s a reason.
             </li>
+
+            <h2>Privacy</h2>
+            <p>
+              LADdle has no accounts, ads or analytics, and it does not use cookies. To make the game
+              work, your browser saves your current game, statistics and a copy of the character
+              list in its local storage. This data stays on your device. The server only receives
+              what is needed to play, such as the character you guess.
+            </p>
+            <p>
+              Like any website, the services that host LADdle may process your public IP address in their technical logs and
+              to limit the number of requests. You can delete everything saved on your device by clearing this site&rsquo;s data in
+              your browser settings.
+            </p>
+            <p>
+              Questions? Contact me here: texrenders@gmail.com.
+            </p>
+
+            <h3>About</h3>
+            <p>
+              LADdle is an unofficial fan project, not affiliated with or endorsed by Ryu Ga Gotoku Studio or SEGA. Like a
+              Dragon / Yakuza and its characters belong to their respective owners.
+            </p>
           </ul>
         </div>
       </div>
