@@ -44,7 +44,7 @@ function HowToPlayModal({ onClose }) {
           <p>
             Type a character&rsquo;s name and press guess or pick it from the list.
             The table then compares that character with the mystery one, attribute by attribute:
-            gender, affiliation, nationality/heritage, games, blood type, fighting style, height
+            gender, affiliation, nationality or heritage, games, blood type, fighting style, height
             and birthdate.
           </p>
 

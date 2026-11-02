@@ -412,7 +412,7 @@ function App() {
 
       const fieldLabels = {
         affiliation: "Affiliation",
-        nationality: "Nationality/Heritage",
+        nationality: "Nationality / Heritage",
         games: "Games",
         fighting_style: "Fighting Style",
         height: "Height",

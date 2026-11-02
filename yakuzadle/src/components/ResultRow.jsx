@@ -5,7 +5,7 @@ function ResultRow({ guess, target, onRevealed }) {
   const fields = [
     ["gender", "Gender"],
     ["affiliation", "Affiliation"],
-    ["nationality", "Nationality/Heritage"],
+    ["nationality", "Nationality / Heritage"],
     ["games", "Games"],
     ["blood_type", "Blood Type"],
     ["fighting_style", "Fighting Style"],

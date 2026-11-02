@@ -16,7 +16,7 @@ function ResultTable({ guesses, target, onNewestRevealed }) {
         <div className="header-cell">Character</div>
         <div className="header-cell">Gender</div>
         <div className="header-cell">Affiliation</div>
-        <div className="header-cell">Nationality/Heritage</div>
+        <div className="header-cell">Nationality / Heritage</div>
         <div className="header-cell">Games</div>
         <div className="header-cell">Blood Type</div>
         <div className="header-cell">Fighting Style</div>
@@ -42,7 +42,7 @@ function ResultTable({ guesses, target, onNewestRevealed }) {
 
       <div className="table-footer">
         * LADdle is an unofficial fan project, not affiliated with or endorsed by Ryu Ga Gotoku Studio or SEGA. Like a
-        Dragon / Yakuza and its characters belong to their respective owners.. *
+        Dragon / Yakuza and its characters belong to their respective owners. *
       </div>
 
     </div>
