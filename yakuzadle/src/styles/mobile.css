@@ -1,0 +1,435 @@
+/* ADAPTACIÓN MÓVIL / TABLET
+   Por encima de 900px de ancho NO se aplica ninguna de estas reglas */
+
+/* Ajustes táctiles */
+@media (hover: none) {
+
+  button,
+  .autocomplete-item {
+    /* Sin retardo/zoom por doble toque */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Evita que el :hover se quede bloqueado tras tocar un botón */
+  .hint-button:hover:not(:disabled) {
+    background: rgba(232, 185, 35, 0.08);
+    color: #e8b923;
+    transform: none;
+  }
+
+  .surrender-button:hover {
+    background: rgba(198, 40, 40, 0.08);
+    color: rgba(220, 80, 80, 1);
+    transform: none;
+  }
+
+  .difficulty-btn:not(.active):hover {
+    border-color: #888;
+    color: #ccc;
+  }
+
+  .autocomplete-item:hover {
+    background: transparent;
+  }
+
+  .autocomplete-item:active {
+    background: #333;
+  }
+}
+
+
+@media (max-width: 900px) {
+
+  /* Estructura de página */
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  /* Sin min-width:0, #root crece hasta el ancho de la tabla en vez de dejar que solo .results haga scroll */
+  #root,
+  .page,
+  .top-container,
+  .hero,
+  .bottom-container,
+  .results {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  #root {
+    padding: 0.5rem 0.5rem calc(1rem + env(safe-area-inset-bottom, 0px));
+    padding-left: calc(0.5rem + env(safe-area-inset-left, 0px));
+    padding-right: calc(0.5rem + env(safe-area-inset-right, 0px));
+  }
+
+  .page {
+    min-height: 0;
+  }
+
+  .top-container {
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem 0.25rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .hero {
+    width: 100%;
+    gap: 14px;
+  }
+
+  /* Cabecera */
+  .header-actions {
+    justify-content: flex-end;
+  }
+
+  .stats-button {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    font-size: 1.5rem;
+  }
+
+  .title {
+    font-size: clamp(3.5rem, 22vw, 6rem);
+    line-height: 1.1;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .subtitle {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    margin-top: -8px;
+    padding: 0 0.5rem;
+  }
+
+  /* El contador de intentos deja de ir flotando sobre el título */
+  .attempts-counter {
+    position: static;
+    margin-top: 12px;
+    padding: 6px 14px;
+    font-size: 0.9rem;
+  }
+
+  /* Dificultad */
+  .difficulty-label {
+    margin: 0;
+  }
+
+  .difficulty-selector {
+    width: 100%;
+    max-width: 420px;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+
+  .difficulty-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px 6px;
+    font-size: 0.95rem;
+  }
+
+  /* Buscador */
+  .autocomplete-wrapper {
+    max-width: 100%;
+  }
+
+  .guess-form {
+    gap: 8px;
+    width: 100%;
+  }
+
+  .guess-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    max-width: none;
+    min-height: 62px;
+    padding: 14px 18px;
+    font-size: 1.35rem;
+    border-radius: 12px;
+  }
+
+  .guess-button {
+    flex: 0 0 auto;
+    min-height: 62px;
+    padding: 14px 20px;
+    font-size: 1.2rem;
+    border-radius: 12px;
+  }
+
+  .autocomplete-box {
+    top: 70px;
+    max-height: min(280px, 40vh);
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    text-align: left;
+  }
+
+  .autocomplete-item {
+    min-height: 56px;
+    padding: 6px 14px;
+    font-size: 1.1rem;
+  }
+
+  .suggestion-img,
+  .suggestion-img-placeholder {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+  }
+
+  /* Pistas y acciones */
+  .action-bar {
+    padding-top: 0.25rem;
+  }
+
+  .hint-button,
+  .surrender-button {
+    min-height: 44px;
+  }
+
+  .hints-area {
+    padding: 0.5rem 0;
+  }
+
+  .hints-container {
+    min-width: 0;
+    max-width: 100%;
+    padding: 12px 14px;
+    text-align: left;
+  }
+
+  .hint-item {
+    flex-wrap: wrap;
+    gap: 4px 8px;
+  }
+
+  /* Pantallas de victoria / derrota */
+  .celebration,
+  .waiting-message,
+  .surrender-screen {
+    width: 100%;
+    gap: 14px;
+    padding: 1.25rem 1rem;
+    margin: 12px 0;
+  }
+
+  .celebration h2 {
+    font-size: clamp(1.25rem, 6vw, 1.7rem);
+    text-align: center;
+    margin: 0;
+  }
+
+  .celebration p {
+    font-size: 1.05rem;
+  }
+
+  .surrender-screen h2 {
+    font-size: 1.6rem;
+    margin: 0;
+  }
+
+  .surrender-screen p {
+    font-size: 1rem;
+    margin: 0;
+  }
+
+  .surrender-character-image {
+    width: 100px;
+    height: 100px;
+  }
+
+  .surrender-character-name {
+    font-size: 1.2rem;
+  }
+
+  .celebration .guess-button,
+  .surrender-screen .guess-button,
+  .waiting-message .guess-button {
+    min-height: 44px;
+  }
+
+  .countdown-time {
+    font-size: 1.4rem;
+  }
+
+  /* Modal de estadísticas */
+  .stats-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .stats-modal {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: 90vh;
+    max-height: 90dvh;
+    overflow-y: auto;
+    padding: 1.25rem 1rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
+    border-radius: 16px 16px 0 0;
+  }
+
+  .stats-modal h2 {
+    font-size: 1.25rem;
+    margin: 0 2.5rem 0 0;
+  }
+
+  .stats-modal-close {
+    top: 6px;
+    right: 6px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    font-size: 1.3rem;
+  }
+
+  .stats-summary {
+    gap: 4px;
+  }
+
+  .stats-item span {
+    font-size: 1.6rem;
+  }
+
+  /* Toast */
+  .toast {
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    width: calc(100% - 1.5rem);
+    max-width: 420px;
+    justify-content: space-between;
+    padding: 12px 14px;
+    font-size: 0.95rem;
+  }
+
+  .toast-close {
+    min-width: 32px;
+    min-height: 32px;
+  }
+
+  /* Resultados en misma tabla de 9 columnas, pero con scroll horizontal
+     La columna del nombre y la cabecera se quedan fijas al deslizar */
+  .bottom-container {
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+
+  .results {
+    padding: 0;
+    /* Si estuviera centrado se cortaría el lado izquierdo */
+    justify-content: flex-start;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: none;
+  }
+
+  .table {
+    flex: 0 0 auto;
+    /* Ancho suficiente para que las cabeceras no se partan */
+    width: 1400px;
+    min-width: 1400px;
+    max-width: none;
+    margin: 0;
+  }
+
+  .header-row,
+  .row {
+    min-width: 0;
+  }
+
+  /* Menos relleno lateral para que cabeceras como gender no se partan */
+  .header-cell {
+    padding: 12px 6px;
+    letter-spacing: 0.02em;
+  }
+
+  /* Columna character fija a la izquierda mientras se desliza */
+  .header-row>.header-cell:first-child,
+  .character-cell-static {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+  }
+
+  .header-row>.header-cell:first-child {
+    background: #3d3d3d;
+  }
+
+  .character-cell-static {
+    box-shadow: 6px 0 8px -4px rgba(0, 0, 0, 0.55);
+  }
+
+  /* Aviso de scroll arriba en la tabla y siempre visible */
+  .scroll-hint {
+    display: block;
+    order: -1;
+    position: sticky;
+    left: 0;
+    width: calc(100vw - 2.5rem);
+    max-width: 100%;
+    margin: 0 0 -4px;
+    font-size: 0.8rem;
+  }
+
+  /* El pie también queda anclado al ancho de pantalla */
+  .table-footer {
+    position: sticky;
+    left: 0;
+    width: calc(100vw - 2.5rem);
+    max-width: 100%;
+    margin-top: 4px;
+    font-size: 0.78rem;
+    line-height: 1.4;
+  }
+}
+
+
+@media (max-width: 380px) {
+  .difficulty-btn {
+    font-size: 0.85rem;
+  }
+
+  .guess-button {
+    padding: 14px 14px;
+    font-size: 1.1rem;
+  }
+
+  .guess-input {
+    font-size: 1.2rem;
+    padding: 14px;
+  }
+
+}
+
+/* Móvil en horizontal */
+@media (max-width: 900px) and (max-height: 480px) {
+  .stats-modal-overlay {
+    align-items: center;
+  }
+
+  .stats-modal {
+    max-width: 480px;
+    border-radius: 12px;
+    max-height: 94vh;
+    max-height: 94dvh;
+  }
+
+  .autocomplete-box {
+    max-height: 30vh;
+  }
+}
+
+/* Respeta a quien desactiva las animaciones en su dispositivo */
+@media (max-width: 900px) and (prefers-reduced-motion: reduce) {
+  .celebration h2 {
+    animation: none;
+  }
+}
