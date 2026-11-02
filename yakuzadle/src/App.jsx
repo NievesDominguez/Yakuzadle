@@ -19,8 +19,7 @@ import {
 
 const MAX_ATTEMPTS = 15;
 
-// Margen de seguridad (ms) para mostrar la celebración si el navegador no avisa de que terminó la
-// animación de la fila ganadora (la animación completa dura ~3.3 s)
+// Margen de seguridad para desbloquear el input si el navegador no avisa de que terminó la animación de la fila
 const REVEAL_FALLBACK_MS = 6000;
 // Intentos tras los que se gana una carga de pista
 const HINT_CHARGE_THRESHOLDS = [3, 6, 9, 12];
@@ -44,7 +43,7 @@ function readCachedCharacters() {
   }
 }
 
-// Guarda la lista y borra las cachés de despliegues anteriores (cada build usa una clave distinta)
+// Guarda la lista y borra las cachés de despliegues anteriores
 function writeCachedCharacters(data) {
   try {
     Object.keys(localStorage)
@@ -92,8 +91,9 @@ function App() {
   const [targetCharacter, setTargetCharacter] = useState(initialSession?.targetCharacter ?? null); // Personaje objetivo del día  
   const [gameWon, setGameWon] = useState(initialSession?.gameWon ?? false); // Controla si el jugador ha ganado  
   const [showCelebration, setShowCelebration] = useState(false); // Controla la animación de celebración al ganar  
-  const [awaitingReveal, setAwaitingReveal] = useState(false); // true mientras se revelan las casillas del intento ganador
+  const [awaitingReveal, setAwaitingReveal] = useState(false); // true mientras se revelan las casillas del último intento (bloquea el input y el botón Guess)
   const awaitingRevealRef = useRef(false); // Copia síncrona de awaitingReveal para evitar dobles disparos
+  const pendingCelebrationRef = useRef(false); // true si el intento que se está revelando es el ganador
   const revealTimerRef = useRef(null); // Temporizador de seguridad de la revelación
   const [attempts, setAttempts] = useState(initialSession?.attempts ?? 0); // Número de intentos realizados  
   const [usedHintFields, setUsedHintFields] = useState(initialSession?.usedHintFields ?? []); // Campos de pistas ya utilizados  
@@ -112,29 +112,42 @@ function App() {
 
   const [stats, setStats] = useState(() => loadStats("normal")); // Estadísticas del jugador para la dificultad actual
   const [showStats, setShowStats] = useState(false); // Controla la visibilidad del modal de estadísticas
-  const [showHowTo, setShowHowTo] = useState(false); // Controla la visibilidad del modal "How to play"
+  const [showHowTo, setShowHowTo] = useState(false); // Controla la visibilidad del modal how to play
   const [isLoading, setIsLoading] = useState(false); // Controla si hay una petición en curso
   const [gameLost, setGameLost] = useState(initialSession?.gameLost ?? false); // Controla si el jugador ha perdido
 
-  // Cancela una revelación pendiente (al cambiar de modo, reiniciar, etc.)
+  // Cancela una revelación pendiente
   const cancelReveal = useCallback(() => {
     clearTimeout(revealTimerRef.current);
     awaitingRevealRef.current = false;
+    pendingCelebrationRef.current = false;
     setAwaitingReveal(false);
   }, []);
 
-  // Se llama cuando termina de revelarse la última casilla del intento recién hecho:
-  // solo entonces sale la pantalla de victoria / celebración
+  // Se llama cuando termina de revelarse la última casilla del intento recién hecho
+  // para desbloquear el input para el siguiente intento o mostrar victoria
   const finishReveal = useCallback(() => {
-    if (!awaitingRevealRef.current) return; // no había revelación pendiente (p. ej. al recargar la página)
+    if (!awaitingRevealRef.current) return; // No había revelación pendiente
     clearTimeout(revealTimerRef.current);
     awaitingRevealRef.current = false;
     setAwaitingReveal(false);
-    setShowCelebration(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (pendingCelebrationRef.current) {
+      pendingCelebrationRef.current = false;
+      setShowCelebration(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }, []);
 
-  // Cierre estable del modal "How to play" (su efecto de teclado depende de esta referencia)
+  // Bloquea el input y el botón hasta que se revele por completo la fila del intento recién hecho
+  const startReveal = useCallback((isWinningGuess) => {
+    awaitingRevealRef.current = true;
+    pendingCelebrationRef.current = isWinningGuess;
+    setAwaitingReveal(true);
+    clearTimeout(revealTimerRef.current);
+    revealTimerRef.current = setTimeout(finishReveal, REVEAL_FALLBACK_MS);
+  }, [finishReveal]);
+
+  // Cierre del modal how to play
   const closeHowTo = useCallback(() => setShowHowTo(false), []);
 
   // Limpia el temporizador si el componente se desmonta
@@ -171,7 +184,7 @@ function App() {
     };
   }, [showToastMessage]);
 
-  // Persiste la sesión salvo en modo infinito (no se reanuda, su objetivo es aleatorio en el cliente)
+  // Persiste la sesión salvo en modo infinito
   const persistSession = (state) => {
     if (difficulty !== "infinite") saveSession(difficulty, state);
   };
@@ -254,8 +267,8 @@ function App() {
 
   // Maneja el intento de adivinar un personaje  
   const handleGuess = async (name) => {
-    // Evitar peticiones simultáneas o intentos cuando la partida ya terminó
-    if (isLoading || gameWon || gameLost) return;
+    // Evitar peticiones simultáneas, intentos mientras se revela la fila anterior o con la partida terminada
+    if (isLoading || awaitingRevealRef.current || gameWon || gameLost) return;
 
     // Defensa final contra intentos repetidos (no gastan intento ni duplican filas)
     if (guesses.some((g) => g.name === name)) {
@@ -310,15 +323,15 @@ function App() {
         setStats(updated);
         // La celebración espera a que se revelen todas las casillas de la fila (ver finishReveal).
         // Mientras tanto no se muestra la pantalla de victoria ni se desvela al personaje
-        awaitingRevealRef.current = true;
-        setAwaitingReveal(true);
-        clearTimeout(revealTimerRef.current);
-        revealTimerRef.current = setTimeout(finishReveal, REVEAL_FALLBACK_MS);
+        startReveal(true);
       } else if (isLoss) {
         setGameLost(true);
         const updated = updateStats(difficulty, false, newAttempts);
         setStats(updated);
         window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        // Intento fallido: no se puede hacer otro hasta que se revele la fila por completo
+        startReveal(false);
       }
     } catch (error) {
       console.error("Error submitting guess:", error);
@@ -448,8 +461,7 @@ function App() {
 
   return (
     <div className="page">
-      {/* Esquina superior izquierda de la página. Va fuera de .top-container (que mide lo que su
-          contenido) para anclarse a la esquina real del documento */}
+      {/* Esquina superior izquierda de la página. Va fuera de .top-container para anclarse a la esquina del documento */}
       <button
         className="info-button"
         onClick={() => setShowHowTo(true)}

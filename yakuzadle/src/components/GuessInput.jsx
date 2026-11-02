@@ -22,6 +22,7 @@ function GuessInput({ characters, onGuess, onError, difficulty, guessedNames, is
 
   // Al seleccionar una sugerencia se usa su nombre exacto
   const selectItem = (item) => {
+    if (isLoading) return; // Bloqueado mientras se revela el intento anterior
     setValue("");
     onGuess(item.name);
   };
@@ -29,7 +30,7 @@ function GuessInput({ characters, onGuess, onError, difficulty, guessedNames, is
   // El texto libre se resuelve contra la lista antes de enviarlo
   const submit = (e) => {
     e.preventDefault();
-    if (!value.trim()) return;
+    if (isLoading || !value.trim()) return; // Bloqueado mientras se revela el intento anterior
 
     if (characters.length === 0) {
       onError("Character list not loaded yet. Try again in a moment.");
@@ -66,11 +67,11 @@ function GuessInput({ characters, onGuess, onError, difficulty, guessedNames, is
           className="guess-input"
           disabled={isLoading}
         />
-        <button className="guess-button" disabled={isLoading}>Guess</button>
+        <button type="submit" className="guess-button" disabled={isLoading}>Guess</button>
       </form>
-      
+
       {/* Sugerencias de personajes que coinciden con el input, mostrando imagen, nombre y alias coincidente */}
-      {suggestions.length > 0 && (
+      {!isLoading && suggestions.length > 0 && (
         <div className="autocomplete-box">
           {suggestions.map((item) => (
             <div

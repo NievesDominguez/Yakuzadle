@@ -1,8 +1,4 @@
 // Algoritmo antiguo de selección diaria
-//
-// Solo se usa el día del despliegue (variable LEGACY_FIRST_DAY) para que el personaje de ese día
-// siga siendo el mismo que ya estaban viendo los jugadores. A partir del día siguiente se usa la
-// selección nueva de dailyTarget.js. Se puede borrar este fichero cuando ya no haga falta.
 
 function hashCode(str) {
   let hash = 0;
@@ -20,7 +16,7 @@ function seededRandom(seed) {
   };
 }
 
-// names debe estar en el mismo orden que antes: ids de documento ordenados (orden por defecto de Firestore)
+// names debe estar en el mismo orden que antes: ids de documento ordenados
 function legacyPick(names, dateStr, difficulty) {
   const rand = seededRandom(hashCode(dateStr + ":" + difficulty));
   const indices = names.map((_, i) => i);

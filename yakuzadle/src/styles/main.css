@@ -77,6 +77,13 @@
   cursor: pointer;
 }
 
+/* Input y botón bloqueados mientras se revela el intento anterior */
+.guess-input:disabled,
+.guess-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* AUTOCOMPLETADO (imagen a la izquierda) */
 .autocomplete-wrapper {
   position: relative;
@@ -181,7 +188,7 @@
     1.6fr
     /* Fighting Style */
     1.0fr
-    /* Height (más ancho) */
+    /* Height */
     1.0fr;
   /* Birthdate */
   gap: 12px;
