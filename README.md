@@ -1,92 +1,87 @@
-# Yakuzadle  
-  
-Juego diario de adivinanzas al estilo Wordle ambientado en el universo de la saga *Like a Dragon* (anteriormente *Yakuza*). Cada día aparece un personaje misterioso y el jugador debe identificarlo a través de diversas pistas.
+# LADdle (Yakuzadle)
 
-**Pruébalo: https://laddle.web.app/**
-  
-## Cómo se juega  
-  
-1. Escribe el nombre de un personaje de la saga en el buscador.  
-2. El juego compara tus atributos con los del personaje objetivo y muestra feedback con colores:  
-   - **Verde**: atributo correcto.
-   - **Amarillo**: coincidencia parcial.  
-   - **Rojo**: atributo incorrecto.
-   - **Flechas** (solo para altura y año de nacimiento): indica si el valor real es mayor o menor.
-3. Usa las pistas para afinar tu siguiente intento.
-4. Si te quedas atascado, puedes pedir una **pista** o **rendirte** para revelar el personaje.
-  
-### Atributos comparados  
+Juego diario de adivinanzas estilo Wordle ambientado en la saga *Like a Dragon* (antes *Yakuza*). Cada día hay un personaje misterioso y hay que identificarlo comparando atributos.
 
-Género, afiliación, nacionalidad/ascendencia, juegos, grupo sanguíneo, estilo de pelea, altura y fecha de nacimiento.
-  
-### Modos de dificultad  
-  
-- **Normal**: lista de personajes principales y secundarios más relevantes.
-- **Kiwami**: lista de personajes, incluyendo los principales, algunos NPCs menores y personajes de spin-offs secundarios.
-  
-## Tecnologías  
-  
-| Capa | Tecnologías |  
-|---|---|  
-| Frontend | React 19, Vite, Tailwind CSS, canvas-confetti |  
-| Backend | Node.js, Express, Firebase Admin SDK |  
-| Base de datos | Google Firestore |  
-| Despliegue frontend | Firebase Hosting + GitHub Actions |  
-| Despliegue backend | Render.com |  
-| Assets | Imágenes alojadas en el propio repositorio (`img_yakuzadle/`) |  
-  
-## Estructura del repositorio
+**Jugar: https://laddle.web.app/**
 
-Yakuzadle/  
-├── yakuzadle/              # Aplicación frontend (React + Vite)  
-│   ├── src/  
-│   │   ├── components/     # Componentes UI (GuessInput, ResultRow, etc.)  
-│   │   ├── services/       # Capa de comunicación con la API (api.js)  
-│   │   └── App.jsx         # Estado global y lógica de sesión  
-│   └── vite.config.js  
-├── yakuzadle-backend/      # API REST (Express)  
-│   ├── server.js           # Rutas y selección del personaje diario  
-│   ├── compare.js          # Motor de comparación de atributos  
-│   └── firestore.js        # Acceso a la base de datos  
-├── img_yakuzadle/          # Imágenes de personajes en formato WebP (~657 archivos)  
-├── firebase.json           # Configuración de Firebase Hosting  
-└── .firebaserc             # Proyecto Firebase: yamaibot
+## Cómo se juega
 
-## Variables de entorno  
-  
-### `yakuzadle/.env.development`  
-  
-```env
-VITE_API_BASE_URL=http://localhost:3000  
-VITE_IMAGE_BASE_URL=<URL base para las imágenes de personajes>
+1. Escribe el nombre de un personaje y pulsa **Guess**.
+2. Cada atributo se colorea: **verde** (correcto), **amarillo** (coincidencia parcial) o **rojo** (incorrecto). En altura y fecha de nacimiento, una flecha indica si el objetivo es mayor o menor.
+3. No puedes hacer otro intento hasta que la fila anterior termine de revelarse.
+4. Tienes **15 intentos**. Cada 3 intentos (3, 6, 9 y 12) ganas una carga de **pista**, hasta un máximo de 4.
+
+Atributos comparados: género, afiliación, nacionalidad, juegos, grupo sanguíneo, estilo de pelea, altura y fecha de nacimiento.
+
+| Modo | Descripción |
+|---|---|
+| **Normal** | Personajes principales y secundarios relevantes. Personaje diario. |
+| **Kiwami** | Lista completa, incluye NPCs menores y spin-offs. Personaje diario. |
+| **Infinite** | Personaje aleatorio elegido en el cliente, sin límite de partidas. No guarda sesión. |
+
+Las estadísticas y la partida en curso se guardan en `localStorage`.
+
+## Estructura
+
+```
+yakuzadle/            Frontend (React 19 + Vite)
+yakuzadle-backend/    API (Node.js + Express + Firestore)
+img_yakuzadle/        Imágenes de personajes (PNG)
+scrape_yakuza.py      Script para poblar Firestore con los datos de los personajes
 ```
 
-### `yakuzadle-backend/.env`
+El objetivo diario **nunca llega al cliente** hasta que se acierta o se pierde: el backend guarda el personaje en Firestore y devuelve un estado de partida firmado (HMAC con `REVEAL_SECRET`) que el cliente reenvía en cada intento.
 
-```env
-PORT=3000  
-FIREBASE_SERVICE_ACCOUNT=<ruta o JSON de la service account key>
+## Ejecutar en local
+
+Requisitos: Node.js 20.6+ y un proyecto de Firebase con Firestore (colección `personajes`).
+
+**Backend**
+
+```bash
+cd yakuzadle-backend
+npm install
+node --env-file=.env server.js    # http://localhost:3001
 ```
 
-> `serviceAccountKey.json` está excluido del control de versiones por seguridad.  
-  
-## API Endpoints  
-  
-| Método | Ruta | Descripción |  
-|---|---|---|  
-| `GET` | `/list` | Lista de personajes para el autocompletado |  
-| `GET` | `/guess?name=&difficulty=` | Compara un personaje con el objetivo diario |  
-| `GET` | `/daily-target?difficulty=` | Devuelve el personaje objetivo del día |  
-| `GET` | `/hint?difficulty=` | Devuelve un atributo no revelado al azar |  
-| `GET` | `/health` | Comprobación de estado del servidor |  
-  
-**Parámetro `difficulty`**: `normal` o `kiwami`.  
-  
-## Despliegue  
-  
-El frontend se despliega automáticamente en **Firebase Hosting** mediante GitHub Actions al hacer push a `main`. El backend está alojado en **Render.com** y se conecta a **Google Firestore** para obtener los datos de los personajes.  
-  
-## Créditos  
-  
-Proyecto fan no oficial basado en la saga *Like a Dragon / Yakuza* Ryu Ga Gotoku Studio.
-Inspirado en [Wordle](https://www.nytimes.com/games/wordle/index.html) y [Loldle](https://loldle.net/).
+**Frontend**
+
+```bash
+cd yakuzadle
+npm install
+npm run dev                       # http://localhost:5173
+```
+
+En desarrollo el frontend apunta a `http://localhost:3001` (`yakuzadle/.env.development`).
+
+### Variables de entorno del backend (`yakuzadle-backend/.env`)
+
+| Variable | Obligatoria | Descripción |
+|---|---|---|
+| `FIREBASE_TYPE`, `FIREBASE_PROJECT_ID`, `FIREBASE_PRIVATE_KEY_ID`, `FIREBASE_PRIVATE_KEY`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_CLIENT_ID`, `FIREBASE_AUTH_URI`, `FIREBASE_TOKEN_URI`, `FIREBASE_AUTH_PROVIDER_X509_CERT_URL`, `FIREBASE_CLIENT_X509_CERT_URL` | Sí | Campos de la service account de Firebase |
+| `REVEAL_SECRET` | Sí | Mínimo 16 caracteres (recomendado 32+). Firma el estado de partida y decide el personaje diario. Genera uno con `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+| `PORT` | No | Por defecto `3001` |
+| `LEGACY_FIRST_DAY` | No | Fecha `YYYY-MM-DD` (UTC) |
+| `TRUST_PROXY_HOPS` | No | Proxies de confianza. Por defecto `1` |
+| `API_RATE_LIMIT_PER_MIN` / `IMAGE_RATE_LIMIT_PER_MIN` | No | Límites por minuto. Por defecto `60` / `600` |
+
+## API
+
+`difficulty` acepta `normal` o `kiwami` (cualquier otro valor se trata como `normal`).
+
+| Ruta | Descripción |
+|---|---|
+| `GET /list` | Lista de personajes para el autocompletado |
+| `GET /guess?name=&difficulty=&state=` | Compara un personaje con el objetivo. Devuelve el resultado y el nuevo `state`. En modo infinito se usa `targetName` en lugar de `state` |
+| `GET /hint?difficulty=&state=` | Devuelve un atributo aún no revelado |
+| `GET /images/:filename` | Proxy de imágenes de personajes |
+| `GET /health` | Estado del servidor |
+
+## Despliegue
+
+- **Frontend:** GitHub Actions (`.github/workflows/deploy.yml`) compila y publica en Firebase Hosting al hacer push a `main`. Requiere el secreto `FIREBASE_TOKEN`.
+- **Backend:** Render.com, con las variables de entorno anteriores configuradas en el servicio. Su URL se define en `yakuzadle/.env.production`.
+
+## Créditos
+
+Proyecto fan no oficial, sin relación con Ryu Ga Gotoku Studio ni SEGA. *Like a Dragon / Yakuza* y sus personajes pertenecen a sus respectivos propietarios. Inspirado en [Wordle](https://www.nytimes.com/games/wordle/index.html) y [Loldle](https://loldle.net/).
