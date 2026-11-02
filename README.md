@@ -88,5 +88,5 @@ El frontend se despliega automáticamente en **Firebase Hosting** mediante GitHu
   
 ## Créditos  
   
-Proyecto fan no oficial basado en la saga *Like a Dragon / Yakuza* de SEGA / Ryu Ga Gotoku Studio.
+Proyecto fan no oficial basado en la saga *Like a Dragon / Yakuza* Ryu Ga Gotoku Studio.
 Inspirado en [Wordle](https://www.nytimes.com/games/wordle/index.html) y [Loldle](https://loldle.net/).

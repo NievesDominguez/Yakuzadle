@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import ResultRow from "./ResultRow";
 
-function ResultTable({ guesses, target }) {
+function ResultTable({ guesses, target, onNewestRevealed }) {
   const tableRef = useRef(null);
 
   useEffect(() => {
@@ -26,17 +26,23 @@ function ResultTable({ guesses, target }) {
 
       <div ref={tableRef} />
 
-      {[...guesses].reverse().map((g) => (
-        <ResultRow key={g.name} guess={g} target={target} />
+      {[...guesses].reverse().map((g, i) => (
+        // Solo la fila más reciente avisa de cuándo termina de revelarse
+        <ResultRow
+          key={g.name}
+          guess={g}
+          target={target}
+          onRevealed={i === 0 ? onNewestRevealed : undefined}
+        />
       ))}
 
-      <div className="scroll-hint">  
-        Swipe horizontally to see all columns.  
+      <div className="scroll-hint">
+        Swipe horizontally to see all columns.
       </div>
 
-      <div className="table-footer">  
-        * Ryu Ga Gotoku Online does not count for color comparison. If it matches, it appears in <strong>bold</strong>.  
-      </div>  
+      <div className="table-footer">
+        * Ryu Ga Gotoku Online does not count for color comparison. If it matches, it appears in <strong>bold</strong>.
+      </div>
 
     </div>
   );

@@ -1,7 +1,6 @@
-/* ADAPTACIÓN MÓVIL / TABLET
-   Por encima de 900px de ancho NO se aplica ninguna de estas reglas */
+/* ADAPTACIÓN MÓVIL / TABLET */
 
-/* Ajustes táctiles */
+/* Ajustes táctiles generales */
 @media (hover: none) {
 
   button,
@@ -11,7 +10,7 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Evita que el :hover se quede bloqueado tras tocar un botón */
+  /* Evita que el hover se quede pegado tras tocar un botón */
   .hint-button:hover:not(:disabled) {
     background: rgba(232, 185, 35, 0.08);
     color: #e8b923;
@@ -85,11 +84,18 @@
     justify-content: flex-end;
   }
 
-  .stats-button {
+  .stats-button,
+  .info-button {
     min-width: 44px;
     min-height: 44px;
     padding: 0;
     font-size: 1.5rem;
+  }
+
+  /* Esquina superior izquierda, a la misma altura que el botón de estadísticas */
+  .info-button {
+    top: 1.25rem;
+    left: 0.75rem;
   }
 
   .title {
@@ -314,8 +320,8 @@
     min-height: 32px;
   }
 
-  /* Resultados en misma tabla de 9 columnas, pero con scroll horizontal
-     La columna del nombre y la cabecera se quedan fijas al deslizar */
+  /* Resultados en la misma tabla de 9 columnas, pero con scroll horizontal
+     La columna character y la cabecera se quedan fijas al deslizar */
   .bottom-container {
     margin-top: 0;
     margin-bottom: 1rem;
@@ -367,7 +373,7 @@
     box-shadow: 6px 0 8px -4px rgba(0, 0, 0, 0.55);
   }
 
-  /* Aviso de scroll arriba en la tabla y siempre visible */
+  /* Aviso de scroll arriba de la tabla y siempre visible */
   .scroll-hint {
     display: block;
     order: -1;

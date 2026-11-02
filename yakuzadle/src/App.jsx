@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import GuessInput from "./components/GuessInput";
 import ResultTable from "./components/ResultTable";
 import Celebration from "./components/Celebration";
@@ -9,6 +9,7 @@ import { loadStats, updateStats } from "./utils/stats";
 import Countdown from "./components/Countdown";
 
 import StatsModal from "./components/StatsModal";
+import HowToPlayModal from "./components/HowToPlayModal";
 import {
   guessCharacter,
   getCharacterList,
@@ -17,6 +18,10 @@ import {
 } from "./services/api";
 
 const MAX_ATTEMPTS = 15;
+
+// Margen de seguridad (ms) para mostrar la celebración si el navegador no avisa de que terminó la
+// animación de la fila ganadora (la animación completa dura ~3.3 s)
+const REVEAL_FALLBACK_MS = 6000;
 // Intentos tras los que se gana una carga de pista
 const HINT_CHARGE_THRESHOLDS = [3, 6, 9, 12];
 const MAX_HINTS = 4;
@@ -87,6 +92,9 @@ function App() {
   const [targetCharacter, setTargetCharacter] = useState(initialSession?.targetCharacter ?? null); // Personaje objetivo del día  
   const [gameWon, setGameWon] = useState(initialSession?.gameWon ?? false); // Controla si el jugador ha ganado  
   const [showCelebration, setShowCelebration] = useState(false); // Controla la animación de celebración al ganar  
+  const [awaitingReveal, setAwaitingReveal] = useState(false); // true mientras se revelan las casillas del intento ganador
+  const awaitingRevealRef = useRef(false); // Copia síncrona de awaitingReveal para evitar dobles disparos
+  const revealTimerRef = useRef(null); // Temporizador de seguridad de la revelación
   const [attempts, setAttempts] = useState(initialSession?.attempts ?? 0); // Número de intentos realizados  
   const [usedHintFields, setUsedHintFields] = useState(initialSession?.usedHintFields ?? []); // Campos de pistas ya utilizados  
   const [hints, setHints] = useState(initialSession?.hints ?? []); // Lista de pistas obtenidas
@@ -104,8 +112,33 @@ function App() {
 
   const [stats, setStats] = useState(() => loadStats("normal")); // Estadísticas del jugador para la dificultad actual
   const [showStats, setShowStats] = useState(false); // Controla la visibilidad del modal de estadísticas
+  const [showHowTo, setShowHowTo] = useState(false); // Controla la visibilidad del modal "How to play"
   const [isLoading, setIsLoading] = useState(false); // Controla si hay una petición en curso
   const [gameLost, setGameLost] = useState(initialSession?.gameLost ?? false); // Controla si el jugador ha perdido
+
+  // Cancela una revelación pendiente (al cambiar de modo, reiniciar, etc.)
+  const cancelReveal = useCallback(() => {
+    clearTimeout(revealTimerRef.current);
+    awaitingRevealRef.current = false;
+    setAwaitingReveal(false);
+  }, []);
+
+  // Se llama cuando termina de revelarse la última casilla del intento recién hecho:
+  // solo entonces sale la pantalla de victoria / celebración
+  const finishReveal = useCallback(() => {
+    if (!awaitingRevealRef.current) return; // no había revelación pendiente (p. ej. al recargar la página)
+    clearTimeout(revealTimerRef.current);
+    awaitingRevealRef.current = false;
+    setAwaitingReveal(false);
+    setShowCelebration(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  // Cierre estable del modal "How to play" (su efecto de teclado depende de esta referencia)
+  const closeHowTo = useCallback(() => setShowHowTo(false), []);
+
+  // Limpia el temporizador si el componente se desmonta
+  useEffect(() => () => clearTimeout(revealTimerRef.current), []);
 
   // Funciones estables para que no cambien en cada render
   const showToastMessage = useCallback((msg) => {
@@ -159,6 +192,7 @@ function App() {
     setGameWon(false);
     setGameLost(false);
     setShowCelebration(false);
+    cancelReveal();
     setAttempts(0);
     setTargetCharacter(null);
     setUsedHintFields([]);
@@ -196,6 +230,7 @@ function App() {
     setGameWon(false);
     setGameLost(false);
     setShowCelebration(false);
+    cancelReveal();
     setAttempts(0);
     setTargetCharacter(null);
     setUsedHintFields([]);
@@ -273,11 +308,12 @@ function App() {
         setTargetCharacter(data.target); // Guarda el objetivo revelado para que la tarjeta salga verde
         const updated = updateStats(difficulty, true, newAttempts);
         setStats(updated);
-        const totalAnimationTime = 4000;
-        setTimeout(() => {
-          setShowCelebration(true);
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }, totalAnimationTime);
+        // La celebración espera a que se revelen todas las casillas de la fila (ver finishReveal).
+        // Mientras tanto no se muestra la pantalla de victoria ni se desvela al personaje
+        awaitingRevealRef.current = true;
+        setAwaitingReveal(true);
+        clearTimeout(revealTimerRef.current);
+        revealTimerRef.current = setTimeout(finishReveal, REVEAL_FALLBACK_MS);
       } else if (isLoss) {
         setGameLost(true);
         const updated = updateStats(difficulty, false, newAttempts);
@@ -312,6 +348,7 @@ function App() {
     setGameWon(false);
     setGameLost(false);
     setShowCelebration(false);
+    cancelReveal();
     setAttempts(0);
     setTargetCharacter(null);
     setUsedHintFields([]);
@@ -411,6 +448,17 @@ function App() {
 
   return (
     <div className="page">
+      {/* Esquina superior izquierda de la página. Va fuera de .top-container (que mide lo que su
+          contenido) para anclarse a la esquina real del documento */}
+      <button
+        className="info-button"
+        onClick={() => setShowHowTo(true)}
+        title="How to play"
+        aria-label="How to play"
+      >
+        ℹ️
+      </button>
+
       {showStats && (
         <StatsModal
           stats={stats}
@@ -418,6 +466,8 @@ function App() {
           onClose={() => setShowStats(false)}
         />
       )}
+
+      {showHowTo && <HowToPlayModal onClose={closeHowTo} />}
 
       <div className="top-container">
         <header className="hero">
@@ -452,14 +502,14 @@ function App() {
             </button>
           </div>
 
-          {!gameWon && !gameLost ? (
+          {awaitingReveal || (!gameWon && !gameLost) ? (
             <GuessInput
               characters={characters}
               onGuess={handleGuess}
               onError={showToastMessage}
               difficulty={difficulty}
               guessedNames={guesses.map(g => g.name)}
-              isLoading={isLoading}
+              isLoading={isLoading || awaitingReveal}
             />
           ) : gameLost ? (
             <div className="surrender-screen">
@@ -560,7 +610,7 @@ function App() {
       <div className="bottom-container">
         {guesses.length > 0 && (
           <main className="results">
-            <ResultTable guesses={guesses} target={targetCharacter} />
+            <ResultTable guesses={guesses} target={targetCharacter} onNewestRevealed={finishReveal} />
           </main>
         )}
       </div>

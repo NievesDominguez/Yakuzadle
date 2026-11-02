@@ -1,7 +1,7 @@
 import { IMAGE_BASE_URL } from "../services/api";
 
 
-function ResultRow({ guess, target }) {
+function ResultRow({ guess, target, onRevealed }) {
   const fields = [
     ["gender", "Gender"],
     ["affiliation", "Affiliation"],
@@ -14,7 +14,7 @@ function ResultRow({ guess, target }) {
   ];
 
   // Palabras que se dejan en minúscula dentro del Title Case  
-  const LOWERCASE_WORDS = new Set(["of", "the", "a", "and", "with", "at"]);  
+  const LOWERCASE_WORDS = new Set(["of", "the", "a", "and", "with", "at"]);
 
   // Flechas para indicar si la altura y edad es mayor/menor
   const arrowFor = (key, color) => {
@@ -42,29 +42,29 @@ function ResultRow({ guess, target }) {
     return "";
   };
 
-  const colorForBirth = (rawColor) => {  
-    if (rawColor === "green") return "green";  
-    if (rawColor === "yellow") return "yellow";  
-    if (rawColor.includes("older") || rawColor.includes("younger")) {  
-      return rawColor.includes("red") ? "red" : "yellow";  
-    }  
-    return "red";  
+  const colorForBirth = (rawColor) => {
+    if (rawColor === "green") return "green";
+    if (rawColor === "yellow") return "yellow";
+    if (rawColor.includes("older") || rawColor.includes("younger")) {
+      return rawColor.includes("red") ? "red" : "yellow";
+    }
+    return "red";
   };
 
-  const toTitleCase = (str) =>  
-    str  
-      .split(/\s+/)  
-      .map((word) => {  
-        const lower = word.toLowerCase();  
-        if (LOWERCASE_WORDS.has(lower)) return lower;  
-        return lower.charAt(0).toUpperCase() + lower.slice(1);  
-      })  
-      .join(" ");  
+  const toTitleCase = (str) =>
+    str
+      .split(/\s+/)
+      .map((word) => {
+        const lower = word.toLowerCase();
+        if (LOWERCASE_WORDS.has(lower)) return lower;
+        return lower.charAt(0).toUpperCase() + lower.slice(1);
+      })
+      .join(" ");
 
-  const normalizeFightingStyle = (style) => {  
-    if (!style) return "";  
-    const cleaned = style.replace(/\s*\([^)]*\)/g, "").trim();  
-    return toTitleCase(cleaned);  
+  const normalizeFightingStyle = (style) => {
+    if (!style) return "";
+    const cleaned = style.replace(/\s*\([^)]*\)/g, "").trim();
+    return toTitleCase(cleaned);
   };
 
   const imageUrl = guess.character?.images?.[0]
@@ -112,7 +112,7 @@ function ResultRow({ guess, target }) {
   const renderGames = () => {
     if (!groupedGames.length) return null;
     return groupedGames.map((game, idx) => {
-      const isExcluded = game.includes(EXCLUDED_GAME);  
+      const isExcluded = game.includes(EXCLUDED_GAME);
       const isBold = isExcluded && guess.comparison?.rggo_match;
       return (
         <div key={idx} className="list-item">
@@ -160,6 +160,10 @@ function ResultRow({ guess, target }) {
     <div className="row">
       <div
         className="character-cell-static"
+        // La celda del personaje es la última en animarse: cuando termina, toda la fila está revelada
+        onAnimationEnd={(e) => {
+          if (e.target === e.currentTarget && onRevealed) onRevealed();
+        }}
         style={{
           animationDelay: `${characterDelay}s`,
           "--character-final-bg": characterFinalBg,
